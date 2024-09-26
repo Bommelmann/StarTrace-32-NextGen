@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"esp_log.h": "c",
+			"esp_spiffs.h": "c",
+			"array": "c"
+		}
+	}
+}

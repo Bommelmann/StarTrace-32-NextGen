@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu with JSON Fetch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        /* Layout */
+        .menu {
+            width: 200px;
+            background-color: #333;
+            height: 100vh;
+            padding: 0;
+        }
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu ul li {
+            padding: 15px;
+            text-align: center;
+        }
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+        .menu ul li a:hover {
+            background-color: #575757;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        /* Identification Content */
+        #json-output {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            width: 50%;
+            text-align: center;
+            font-size: 16px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Left Menu -->
+    <div class="menu">
+        <ul>
+            <li><a href="#" onclick="showContent('home')">Home</a></li>
+            <li><a href="#" onclick="showContent('identification')">Identification</a></li>
+            <li><a href="#" onclick="showContent('fault-codes')">Fault Codes</a></li>
+            <li><a href="#" onclick="showContent('set-up')">Set Up</a></li>
+            <li><a href="#" onclick="requestUploadScript()">Upload Script</a></li>
+        </ul>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content">
+        <div id="home" class="content-section">
+            <h1>Welcome to the Home Page</h1>
+        </div>
+        <div id="identification" class="content-section hidden">
+            <h1>Identification</h1>
+            <button onclick="fetchJson()">Fetch JSON</button>
+            <div id="json-output">JSON output will appear here...</div>
+        </div>
+        <div id="fault-codes" class="content-section hidden">
+            <h1>Fault Codes</h1>
+            <p>Here you can view fault codes.</p>
+        </div>
+        <div id="set-up" class="content-section hidden">
+            <h1>Set Up</h1>
+            <p>Settings and configuration options.</p>
+        </div>
+    </div>
+
+    <script>
+        // Function to show selected content and hide others
+        function showContent(section) {
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(section).classList.remove('hidden');
+        }
+
+        // Function to fetch JSON from server
+        function fetchJson() {
+            fetch('/get-date')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('json-output').textContent = JSON.stringify(data);
+                })
+                .catch(error => {
+                    document.getElementById('json-output').textContent = 'Error fetching JSON';
+                    console.error('Error:', error);
+                });
+
+                function requestUploadScript() {
+            fetch('/upload_script.html')
+                .then(response => response.text())
+                .then(html => {
+                    const contentDiv = document.querySelector('.content');
+                    contentDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Fehler beim Laden des Upload-Skripts:', error);
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>

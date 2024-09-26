@@ -1,0 +1,67 @@
+menu "Startrace Custom Configuration"
+
+    menu "CAN Config"
+    config EXAMPLE_TX_GPIO_NUM
+        int "TX GPIO number"
+        default 21 if IDF_TARGET_ESP32
+        default 0
+        help
+            This option selects the GPIO pin used for the TX signal. Connect the
+            TX signal to your transceiver.
+
+    config EXAMPLE_RX_GPIO_NUM
+        int "RX GPIO number"
+        default 22 if IDF_TARGET_ESP32
+        default 2
+        help
+            This option selects the GPIO pin used for the RX signal. Connect the
+            RX signal to your transceiver.
+    endmenu
+
+    menu "Wifi Config"
+
+    config ESP_WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            SSID (network name) for the example to connect to.
+
+    config ESP_WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        help
+            WiFi password (WPA or WPA2) for the example to use.
+    config ESP_WIFI_CHANNEL
+        int "WiFi Channel"
+        range 1 13
+        default 1
+        help
+            WiFi channel (network channel) for the example to use.
+
+    config ESP_MAX_STA_CONN
+        int "Maximal STA connections"
+        default 4
+        help
+            Max number of the STA connects to AP.
+    endmenu
+
+    menu "SD Config"
+
+    config EXAMPLE_PIN_MOSI
+        int "MOSI GPIO number"
+        default 11
+
+    config EXAMPLE_PIN_MISO
+        int "MISO GPIO number"
+        default 13
+
+    config EXAMPLE_PIN_CLK
+        int "CLK GPIO number"
+        default 12
+
+    config EXAMPLE_PIN_CS
+        int "CS GPIO number"
+        default 10
+    endmenu
+
+endmenu
