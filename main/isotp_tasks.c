@@ -18,6 +18,7 @@ void isotp_processing_task(void *arg)
     IsoTpLinkContainer *isotp_link_container = (IsoTpLinkContainer*)arg;
     IsoTpLink *link_ptr = &isotp_link_container->link;
     uint8_t *payload_buf = isotp_link_container->payload_buf;
+    const char *taskname=isotp_link_container->taskname;
     while (1)
     {
         if (link_ptr->send_status != ISOTP_SEND_STATUS_INPROGRESS &&
@@ -39,8 +40,13 @@ void isotp_processing_task(void *arg)
         if (ISOTP_RET_OK == ret) {
             ESP_LOGI(ISOTP_TASKS_TAG, "Received ISO-TP message with length: %04X", out_size);
             for (int i = 0; i < out_size; i++) {
-                ESP_LOGD(ISOTP_TASKS_TAG, "payload_buf[%d] = %02x", i, payload_buf[i]);
+                ESP_LOGI(ISOTP_TASKS_TAG, "payload_buf[%d] = %02x", i, payload_buf[i]);
             }
+        }
+        else if(ISOTP_RET_NO_DATA== ret){
+            ESP_LOGI(ISOTP_TASKS_TAG, "No data received in task: %s", taskname);
+
+        
             //ble_send(link_ptr->receive_arbitration_id, link_ptr->send_arbitration_id, payload_buf, out_size);
             // websocket_send(link_ptr->receive_arbitration_id, link_ptr->send_arbitration_id, payload_buf, out_size);
         }

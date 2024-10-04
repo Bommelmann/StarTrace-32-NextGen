@@ -376,6 +376,35 @@ void app_main(void)
     xTaskCreatePinnedToCore(twai_transmit_task, "TWAI_tx", 4096, NULL, TX_TASK_PRIO, NULL, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(isotp_send_queue_task, "ISOTP_process_send_queue", 4096, NULL, MAIN_TSK_PRIO, NULL, tskNO_AFFINITY);
     ESP_LOGI(MAIN_TAG, "Tasks started");
+
+    /*
+    //////Test ISO-TP send
+    //Delay Task then fill Queue with messages
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+    send_message_t msg;
+    msg.tx_id = 0x18DA00F1; // Beispiel-Arbitration-ID
+        // Speicher für den Buffer zuweisen
+    msg.buffer = (uint8_t *)malloc(12);
+    msg.reuse_buffer=true;
+    if (msg.buffer == NULL) {
+        // Fehlerbehandlung bei fehlgeschlagener Speicherzuweisung
+        printf("Failed to allocate memory for buffer\n");
+        return;
+    }
+
+    uint8_t data[] = {0x36, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    memcpy(msg.buffer, data, 8);
+
+    msg.msg_length = 8;
+
+    // Senden der Nachricht in die Queue
+    if (xQueueSend(isotp_send_message_queue, &msg, portMAX_DELAY) != pdPASS) {
+        ESP_LOGE(MAIN_TAG, "Failed to send message to isoTP_message_queue");
+    } else {
+        ESP_LOGI(MAIN_TAG, "Message sent to isoTP_message_queue");
+    }
+    */
     // lock done_sem
     xSemaphoreTake(done_sem, portMAX_DELAY);
     // uninstall driver

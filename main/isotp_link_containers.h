@@ -18,6 +18,7 @@ typedef struct IsoTpLinkContainer {
     TaskHandle_t periodic_message_task_handles[4];
     periodic_message_t periodic_messages[4];
     uint32_t periodic_messages_interval_ms;
+    const char *taskname;
 } IsoTpLinkContainer;
 
 extern IsoTpLinkContainer isotp_link_containers[NUM_ISOTP_LINK_CONTAINERS];

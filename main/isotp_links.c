@@ -17,6 +17,7 @@ void configure_isotp_link(int index, uint32_t receive_arbitration_id, uint32_t r
     isotp_link_container->recv_buf = calloc(1, ISOTP_BUFSIZE);
     isotp_link_container->send_buf = calloc(1, ISOTP_BUFSIZE);
     isotp_link_container->payload_buf = calloc(1, ISOTP_BUFSIZE);
+    isotp_link_container->taskname=name;
     assert(isotp_link_container->recv_buf != NULL);
     assert(isotp_link_container->send_buf != NULL);
     assert(isotp_link_container->payload_buf != NULL);
@@ -35,13 +36,10 @@ void configure_isotp_links()
     xSemaphoreTake(isotp_mutex, (TickType_t)100);
     // RX_ID + TX_ID are flipped because this device acts as a "tester" listening for responses from ECUs. the ECU's TX is our RX
     // TODO: make these configurable via j2534 filters
-    configure_isotp_link(0, 0x7E0, 0x7E8, "ecu");
-    configure_isotp_link(1, 0x7E1, 0x7E9, "tcu");
-    configure_isotp_link(2, 0x7E5, 0x7ED, "ptcu");
-    configure_isotp_link(3, 0x607, 0x587, "gateway");
-    configure_isotp_link(4, 0x749, 0x729, "awd");
-    configure_isotp_link(5, 0x744, 0x724, "suspension1");
-    configure_isotp_link(6, 0x692, 0x492, "suspension2");
+    configure_isotp_link(0, 0x18DA00F1, 0x18DAF100, "CPC");
+    //configure_isotp_link(1, 0x18DA01F1, 0x18DAF101, "MCM");
+    //configure_isotp_link(2, 0x18DA03F1, 0x18DAF103, "TCM");
+    //configure_isotp_link(3, 0x18DA3DF1, 0x18DAF13D, "ACM");
     // free lock
     xSemaphoreGive(isotp_mutex);
 }
