@@ -2,6 +2,8 @@
 #include "assert.h"
 #include "isotp.h"
 
+#define ISOTP_TAG               "isotp.c"
+
 ///////////////////////////////////////////////////////
 ///                 STATIC FUNCTIONS                ///
 ///////////////////////////////////////////////////////
@@ -284,6 +286,8 @@ int isotp_send_with_id(IsoTpLink *link, uint32_t id, const uint8_t payload[], ui
                 link->send_timer_bs = isotp_user_get_ms() + ISO_TP_DEFAULT_RESPONSE_TIMEOUT;
                 link->send_protocol_result = ISOTP_PROTOCOL_RESULT_OK;
                 link->send_status = ISOTP_SEND_STATUS_INPROGRESS;
+                ESP_LOGI(ISOTP_TAG, "link->send_status set to InNPROGRESS");
+                
 
                 /* send consecutive frames */
                 while (link->send_offset < link->send_size) {
@@ -297,6 +301,7 @@ int isotp_send_with_id(IsoTpLink *link, uint32_t id, const uint8_t payload[], ui
                 /* check if all data sent */
                 if (link->send_offset >= link->send_size) {
                     link->send_status = ISOTP_SEND_STATUS_IDLE;
+                    ESP_LOGI(ISOTP_TAG,"link->send_status set to IDLE");
                 }
             }
 
@@ -421,20 +426,28 @@ void isotp_on_can_message(IsoTpLink *link, uint8_t *data, uint8_t len) {
             isotp_user_debug("isotp_on_can_message: ISOTP_PCI_TYPE_FLOW_CONTROL_FRAME\n");
             /* handle fc frame only when sending in progress  */
             if (ISOTP_SEND_STATUS_INPROGRESS != link->send_status) {
+                isotp_user_debug("ISOTP_SEND_STATUS_INPROGRESS != link->send_status\n");
                 break;
             }
 
             /* handle message */
             ret = isotp_receive_flow_control_frame(link, &message, len);
-            
+                        
             if (ISOTP_RET_OK == ret) {
                 /* refresh bs timer */
+                isotp_user_debug("isotp_on_can_message: ISOTP_PCI_TYPE_FLOW_CONTROL_FRAME ISOTP_RET_OK\n");
                 link->send_timer_bs = isotp_user_get_ms() + ISO_TP_DEFAULT_RESPONSE_TIMEOUT;
+
+                        /* Debug-Ausgabe für Flow Control Data */
+                isotp_user_debug("Flow Control Data: ");
+                isotp_user_debug("%02X ", message.as.flow_control.FS);
+                isotp_user_debug("\n");
 
                 /* overflow */
                 if (PCI_FLOW_STATUS_OVERFLOW == message.as.flow_control.FS) {
                     link->send_protocol_result = ISOTP_PROTOCOL_RESULT_BUFFER_OVFLW;
                     link->send_status = ISOTP_SEND_STATUS_ERROR;
+                    ESP_LOGI(ISOTP_TAG,"link->send_status set to ERROR");
                 }
 
                 /* wait */
@@ -444,6 +457,7 @@ void isotp_on_can_message(IsoTpLink *link, uint8_t *data, uint8_t len) {
                     if (link->send_wtf_count > ISO_TP_MAX_WFT_NUMBER) {
                         link->send_protocol_result = ISOTP_PROTOCOL_RESULT_WFT_OVRN;
                         link->send_status = ISOTP_SEND_STATUS_ERROR;
+                        ESP_LOGI(ISOTP_TAG,"link->send_status set to ERROR");
                     }
                 }
 
@@ -456,6 +470,8 @@ void isotp_on_can_message(IsoTpLink *link, uint8_t *data, uint8_t len) {
                     }
                     link->send_st_min = isotp_st_min_to_ms(message.as.flow_control.STmin);
                     link->send_wtf_count = 0;
+                    //CTS and send task signalisieren
+                    //xSemaphoreGive(cts_sem);
                 }
             }
             break;
@@ -493,6 +509,7 @@ void isotp_init_link(IsoTpLink *link, uint32_t send_arbitration_id, uint32_t rec
     memset(link, 0, sizeof(*link));
     link->receive_status = ISOTP_RECEIVE_STATUS_IDLE;
     link->send_status = ISOTP_SEND_STATUS_IDLE;
+    ESP_LOGI(ISOTP_TAG,"link->send_status set to IDLE");
     link->send_arbitration_id = send_arbitration_id;
     link->send_buffer = sendbuf;
     link->send_buf_size = sendbufsize;
@@ -529,9 +546,11 @@ void isotp_poll(IsoTpLink *link) {
                 /* check if send finish */
                 if (link->send_offset >= link->send_size) {
                     link->send_status = ISOTP_SEND_STATUS_IDLE;
+                    ESP_LOGI(ISOTP_TAG,"link->send_status set to IDLE");
                 }
             } else {
                 link->send_status = ISOTP_SEND_STATUS_ERROR;
+                ESP_LOGI(ISOTP_TAG,"link->send_status set to ERROR");
             }
         }
 
@@ -539,6 +558,7 @@ void isotp_poll(IsoTpLink *link) {
         if (IsoTpTimeAfter(isotp_user_get_ms(), link->send_timer_bs)) {
             link->send_protocol_result = ISOTP_PROTOCOL_RESULT_TIMEOUT_BS;
             link->send_status = ISOTP_SEND_STATUS_ERROR;
+            ESP_LOGI(ISOTP_TAG,"link->send_status set to ERROR");
         }
     }
 

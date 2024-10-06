@@ -1,5 +1,11 @@
 {
     "idf.adapterTargetName": "esp32s3",
     "idf.portWin": "COM13",
-    "idf.flashType": "UART"
+    "idf.flashType": "UART",
+    "files.associations": {
+        "isotp_links.h": "c",
+        "endian_helpers.h": "c",
+        "task.h": "c",
+        "semphr.h": "c"
+    }
 }

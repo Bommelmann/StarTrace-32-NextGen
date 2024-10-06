@@ -310,9 +310,11 @@ vSemaphoreDelete(done_sem);
 
 
 
+
 SemaphoreHandle_t done_sem;
 SemaphoreHandle_t isotp_send_queue_sem;
 SemaphoreHandle_t isotp_mutex;
+SemaphoreHandle_t cts_sem;
 
 QueueHandle_t websocket_send_queue;
 QueueHandle_t tx_task_queue;
@@ -353,6 +355,7 @@ void app_main(void)
     done_sem = xSemaphoreCreateBinary();
     isotp_send_queue_sem = xSemaphoreCreateBinary();
     isotp_mutex = xSemaphoreCreateMutex();
+    cts_sem = xSemaphoreCreateBinary();
 
     // "TWAI" is knockoff CAN. Install TWAI driver.
     ESP_ERROR_CHECK(twai_driver_install(&g_config, &t_config, &f_config));
@@ -377,34 +380,62 @@ void app_main(void)
     xTaskCreatePinnedToCore(isotp_send_queue_task, "ISOTP_process_send_queue", 4096, NULL, MAIN_TSK_PRIO, NULL, tskNO_AFFINITY);
     ESP_LOGI(MAIN_TAG, "Tasks started");
 
-    /*
+    
     //////Test ISO-TP send
     //Delay Task then fill Queue with messages
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
-    send_message_t msg;
-    msg.tx_id = 0x18DA00F1; // Beispiel-Arbitration-ID
-        // Speicher für den Buffer zuweisen
-    msg.buffer = (uint8_t *)malloc(12);
-    msg.reuse_buffer=true;
-    if (msg.buffer == NULL) {
-        // Fehlerbehandlung bei fehlgeschlagener Speicherzuweisung
-        printf("Failed to allocate memory for buffer\n");
-        return;
-    }
 
-    uint8_t data[] = {0x36, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    memcpy(msg.buffer, data, 8);
-
-    msg.msg_length = 8;
-
-    // Senden der Nachricht in die Queue
-    if (xQueueSend(isotp_send_message_queue, &msg, portMAX_DELAY) != pdPASS) {
-        ESP_LOGE(MAIN_TAG, "Failed to send message to isoTP_message_queue");
-    } else {
-        ESP_LOGI(MAIN_TAG, "Message sent to isoTP_message_queue");
+    /*
+    static const twai_message_t isotp_rq_msg = {
+    // Message type and format settings
+    .extd = 1,              // Standard Format message (11-bit ID)
+    .rtr = 0,               // Send a data frame
+    .ss = 1,                // Is single shot (won't retry on error or NACK)
+    .self = 0,              // Not a self reception request
+    .dlc_non_comp = 1,      // DLC is less than 8
+    // Message ID and payload
+    .identifier = 0x18DA00F1,
+    .data_length_code = 11,
+    .data = {0x36, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+    };
+        // Senden der Nachricht in die Queue
+        if (xQueueSend(isotp_send_message_queue, &isotp_rq_msg, portMAX_DELAY) != pdPASS) {
+            ESP_LOGE(MAIN_TAG, "Failed to send message to isoTP_message_queue");
+        } else {
+            ESP_LOGI(MAIN_TAG, "Message sent to isoTP_message_queue");
+        }
     }
     */
+
+        //////Test ISO-TP send
+    //Delay Task then fill Queue with messages
+    while (1){
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+        send_message_t msg;
+        msg.tx_id = 0x18DA00F1; // Beispiel-Arbitration-ID
+            // Speicher für den Buffer zuweisen
+        msg.buffer = (uint8_t *)malloc(18);
+        msg.reuse_buffer=true;
+        if (msg.buffer == NULL) {
+            // Fehlerbehandlung bei fehlgeschlagener Speicherzuweisung
+            printf("Failed to allocate memory for buffer\n");
+            return;
+        }
+
+        uint8_t data[] = {0x36, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xAA};
+        memcpy(msg.buffer, data, 18);
+
+        msg.msg_length = 18;
+
+        // Senden der Nachricht in die Queue
+        if (xQueueSend(isotp_send_message_queue, &msg, portMAX_DELAY) != pdPASS) {
+            ESP_LOGE(MAIN_TAG, "Failed to send message to isoTP_message_queue");
+        } else {
+            ESP_LOGI(MAIN_TAG, "Message sent to isoTP_message_queue");
+        }
+    }
+
     // lock done_sem
     xSemaphoreTake(done_sem, portMAX_DELAY);
     // uninstall driver

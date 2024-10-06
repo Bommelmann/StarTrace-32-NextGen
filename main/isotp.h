@@ -14,6 +14,12 @@ extern "C" {
 #include "isotp_config.h"
 #include "isotp_user.h"
 #include "isotp_links.h"
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "mutexes.h"
+
 
 /**
  * @brief Initialises the ISO-TP library.

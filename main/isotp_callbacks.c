@@ -15,6 +15,7 @@ int isotp_user_send_can(uint32_t arbitration_id, const uint8_t *data, uint8_t si
 {
     ESP_LOGD(ISOTP_CALLBACKS_TAG, "isotp_user_send_can");
     twai_message_t frame = {
+        .extd= 1, 
         .identifier = arbitration_id,
         .data_length_code = size
     };
