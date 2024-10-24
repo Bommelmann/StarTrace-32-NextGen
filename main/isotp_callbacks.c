@@ -20,7 +20,7 @@ int isotp_user_send_can(uint32_t arbitration_id, const uint8_t *data, uint8_t si
         .data_length_code = size
     };
     memcpy(frame.data, data, sizeof(frame.data));
-    isotp_user_debug("IsoTP user send can ID: 0x%08X\n", arbitration_id);
+    //isotp_user_debug("IsoTP user send can ID: 0x%08X\n", arbitration_id);
     xQueueSend(tx_task_queue, &frame, portMAX_DELAY);
     return ISOTP_RET_OK;
 }
@@ -34,6 +34,6 @@ void isotp_user_debug(const char *message, ...)
 {
     va_list args;
     va_start(args, message);
-   esp_log_writev(ESP_LOG_INFO, ISOTP_CALLBACKS_TAG, message, args);
+    //esp_log_writev(ESP_LOG_INFO, ISOTP_CALLBACKS_TAG, message, args);
     va_end(args);
 }

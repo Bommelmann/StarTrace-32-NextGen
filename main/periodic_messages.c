@@ -10,7 +10,7 @@ void periodic_messages_task(void *arg) {
   while (1) {
     periodic_message_t *periodic_message = (periodic_message_t*)arg;
     for (int i = 0; i < periodic_message->num_msgs; ++i) {
-      send_message_t *msg = &periodic_message->msgs[i];
+      send_message_can_t *msg = &periodic_message->msgs[i];
       xQueueSend(isotp_send_message_queue, msg, pdMS_TO_TICKS(50));
     }
     vTaskDelay(pdMS_TO_TICKS(periodic_message->interval_ms));

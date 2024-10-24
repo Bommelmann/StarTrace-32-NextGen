@@ -266,7 +266,7 @@ int isotp_send_with_id(IsoTpLink *link, uint32_t id, const uint8_t payload[], ui
     /* copy into local buffer */
     link->send_size = size;
     link->send_offset = 0;
-    isotp_user_debug("isotp_send_with_id: Copying %d bytes to send_buffer\n", size);
+    //isotp_user_debug("isotp_send_with_id: Copying %d bytes to send_buffer\n", size);
     (void) memcpy(link->send_buffer, payload, size);
 
     if (link->send_size < 8) {
@@ -426,7 +426,7 @@ void isotp_on_can_message(IsoTpLink *link, uint8_t *data, uint8_t len) {
             isotp_user_debug("isotp_on_can_message: ISOTP_PCI_TYPE_FLOW_CONTROL_FRAME\n");
             /* handle fc frame only when sending in progress  */
             if (ISOTP_SEND_STATUS_INPROGRESS != link->send_status) {
-                isotp_user_debug("ISOTP_SEND_STATUS_INPROGRESS != link->send_status\n");
+                //isotp_user_debug("ISOTP_SEND_STATUS_INPROGRESS != link->send_status\n");
                 break;
             }
 
@@ -483,7 +483,7 @@ void isotp_on_can_message(IsoTpLink *link, uint8_t *data, uint8_t len) {
 }
 
 int isotp_receive(IsoTpLink *link, uint8_t *payload, const uint16_t payload_size, uint16_t *out_size) {
-    isotp_user_debug("isotp_receive\n");
+    //isotp_user_debug("isotp_receive\n");
     uint16_t copylen;
     
     if (ISOTP_RECEIVE_STATUS_FULL != link->receive_status) {
@@ -522,7 +522,7 @@ void isotp_init_link(IsoTpLink *link, uint32_t send_arbitration_id, uint32_t rec
 }
 
 void isotp_poll(IsoTpLink *link) {
-    isotp_user_debug("isotp_poll\n");
+    //isotp_user_debug("isotp_poll\n");
     int ret;
 
     /* only polling when operation in progress */

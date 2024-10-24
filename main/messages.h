@@ -3,6 +3,9 @@
 
 // Simple struct for a dynamically sized send message
 
+#include <stdint.h>
+#include <stdbool.h> // Für bool
+
 typedef struct send_message
 {
     int32_t msg_length;
@@ -10,6 +13,13 @@ typedef struct send_message
     uint32_t rx_id;
     uint32_t tx_id;
     bool reuse_buffer;
-} send_message_t;
+} send_message_can_t;
+
+typedef struct uds_message_string
+{
+    int32_t msg_length;
+    char *uds_string;
+} uds_message_string_t;
+
 
 #endif

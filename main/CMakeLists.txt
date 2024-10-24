@@ -5,7 +5,7 @@ idf_component_register(SRCS "InitializeFilesystem.c"
                              "InitializeFilesystem.c"
                              "initializeSDCard.c"
                              "isotp_link_containers.c" 
-                             "HandleUDSRequest.c"
+                             "twai_tasks.c"
                              "isotp_link_containers.c" 
                             "isotp.c"
                             "isotp_links.c"
@@ -14,7 +14,8 @@ idf_component_register(SRCS "InitializeFilesystem.c"
                             "isotp_tasks.c"
                             "endian_helpers.c"
                             "isotp_callbacks.c" 
-                           
+                            "HandleUDSRequest.c"
+                            "functions.c"                           
                                                                                     
                     INCLUDE_DIRS "." 
                     REQUIRES esp_timer driver fatfs esp_wifi nvs_flash spiffs esp_http_server

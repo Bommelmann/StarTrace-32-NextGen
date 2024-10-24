@@ -278,6 +278,7 @@ xSemaphoreTake(done_sem, portMAX_DELAY);    //Wait for completion
 vSemaphoreDelete(done_sem);
 
 */
+//Own Functions
 
 #include "esp_err.h"
 #include "esp_log.h"
@@ -286,7 +287,8 @@ vSemaphoreDelete(done_sem);
 #include "createWebserver.h"
 #include "InitializeFilesystem.h"
 #include "InitializeSDCard.h"
-#include "HandleUDSRequest.h"
+#include "twai_tasks.h"
+
 
 //ISOTP Stuff
 #include "messages.h"
@@ -302,13 +304,10 @@ vSemaphoreDelete(done_sem);
 #include "freertos/queue.h"
 #include "mutexes.h"
 
-#define EXAMPLE_TAGRX            "RX Task"
-#define EXAMPLE_TAGTX            "TX Task"
-#define EXAMPLE_TAGMain          "App_Main"
-#define CTRL_TASK_TAG           "Ctrl_Task"
-#define MAIN_TAG                   "main"
+#include "HandleUDSRequests.h"
 
 
+#define MAIN_TAG                 "app_main"
 
 
 SemaphoreHandle_t done_sem;
@@ -319,6 +318,8 @@ SemaphoreHandle_t cts_sem;
 QueueHandle_t websocket_send_queue;
 QueueHandle_t tx_task_queue;
 QueueHandle_t isotp_send_message_queue;
+QueueHandle_t handle_uds_request_queue;
+QueueHandle_t handle_uds_request_queue_container;
 
 uint8_t Diag_Resp [8];
 
@@ -350,8 +351,11 @@ void app_main(void)
 
      //Create semaphores and tasks
     tx_task_queue = xQueueCreate(128, sizeof(twai_message_t));
-    //websocket_send_queue = xQueueCreate(128, sizeof(send_message_t));
-    isotp_send_message_queue = xQueueCreate(128, sizeof(send_message_t));
+    //websocket_send_queue = xQueueCreate(128, sizeof(send_message_can_t));
+    isotp_send_message_queue = xQueueCreate(128, sizeof(send_message_can_t));
+    handle_uds_request_queue = xQueueCreate(128, sizeof(uds_message_string_t));
+    handle_uds_request_queue = xQueueCreate(10, sizeof(IsoTpLinkContainer*));
+    
     done_sem = xSemaphoreCreateBinary();
     isotp_send_queue_sem = xSemaphoreCreateBinary();
     isotp_mutex = xSemaphoreCreateMutex();
@@ -378,6 +382,7 @@ void app_main(void)
     xTaskCreatePinnedToCore(twai_receive_task, "TWAI_rx", 4096, NULL, RX_TASK_PRIO, NULL, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(twai_transmit_task, "TWAI_tx", 4096, NULL, TX_TASK_PRIO, NULL, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(isotp_send_queue_task, "ISOTP_process_send_queue", 4096, NULL, MAIN_TSK_PRIO, NULL, tskNO_AFFINITY);
+    xTaskCreatePinnedToCore(handle_uds_request_task, "UDS_handling", 4096, NULL, MAIN_TSK_PRIO, NULL, tskNO_AFFINITY);
     ESP_LOGI(MAIN_TAG, "Tasks started");
 
     
@@ -407,33 +412,18 @@ void app_main(void)
     }
     */
 
-        //////Test ISO-TP send
+       //////Test ISO-TP send
     //Delay Task then fill Queue with messages
     while (1){
         vTaskDelay(2000 / portTICK_PERIOD_MS);
 
-        send_message_t msg;
-        msg.tx_id = 0x18DA00F1; // Beispiel-Arbitration-ID
-            // Speicher für den Buffer zuweisen
-        msg.buffer = (uint8_t *)malloc(18);
-        msg.reuse_buffer=true;
-        if (msg.buffer == NULL) {
-            // Fehlerbehandlung bei fehlgeschlagener Speicherzuweisung
-            printf("Failed to allocate memory for buffer\n");
-            return;
-        }
-
-        uint8_t data[] = {0x36, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xAA};
-        memcpy(msg.buffer, data, 18);
-
-        msg.msg_length = 18;
-
-        // Senden der Nachricht in die Queue
-        if (xQueueSend(isotp_send_message_queue, &msg, portMAX_DELAY) != pdPASS) {
-            ESP_LOGE(MAIN_TAG, "Failed to send message to isoTP_message_queue");
-        } else {
-            ESP_LOGI(MAIN_TAG, "Message sent to isoTP_message_queue");
-        }
+            //Test
+            uds_message_string_t uds_message_string_queue_send;
+            uds_message_string_queue_send.msg_length = 14;
+            uds_message_string_queue_send.uds_string = malloc(15);
+            strcpy(uds_message_string_queue_send.uds_string, "18DA00F122F100");
+            //Test: Send in uds queue
+            xQueueSend(handle_uds_request_queue, &uds_message_string_queue_send, portMAX_DELAY);
     }
 
     // lock done_sem

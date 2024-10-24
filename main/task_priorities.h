@@ -3,3 +3,4 @@
 #define ISOTP_TSK_PRIO 4       // Run the message pump at a higher priority than the main queue/dequeue task when messages are available
 #define SOCKET_TASK_PRIO 1      // Run the socket task at a low priority.
 #define MAIN_TSK_PRIO 1        // Run the main task at the same priority as the BLE queue/dequeue tasks to help in delivery ordering.
+#define UDS_TSK_PRIO 1         // Run the UDS task at the same priority as the BLE queue/dequeue tasks to help in delivery ordering.

@@ -38,13 +38,20 @@ void isotp_processing_task(void *arg)
         xSemaphoreGive(isotp_mutex);
         // if it is time to send fully received + parsed ISO-TP data over BLE and/or websocket
         if (ISOTP_RET_OK == ret) {
+            /*
             ESP_LOGI(ISOTP_TASKS_TAG, "Received ISO-TP message with length: %04X", out_size);
             for (int i = 0; i < out_size; i++) {
                 ESP_LOGI(ISOTP_TASKS_TAG, "payload_buf[%d] = %02x", i, payload_buf[i]);
             }
+            */
+            //Send correctly received data to handle_uds_request_task
+            if (xQueueSend(handle_uds_request_queue_container, &isotp_link_container, portMAX_DELAY) != pdPASS) {
+                ESP_LOGE(ISOTP_TASKS_TAG, "Failed to send pointer to handle_uds_request_queue");
+            }
         }
         else if(ISOTP_RET_NO_DATA== ret){
             ESP_LOGI(ISOTP_TASKS_TAG, "No data received in task: %s", taskname);
+
 
         
             //ble_send(link_ptr->receive_arbitration_id, link_ptr->send_arbitration_id, payload_buf, out_size);
@@ -70,10 +77,10 @@ void isotp_send_queue_task(void *arg)
         {
             twai_start();
         }
-        send_message_t msg;
+        send_message_can_t msg;
         xQueueReceive(isotp_send_message_queue, &msg, portMAX_DELAY);
         xSemaphoreTake(isotp_mutex, (TickType_t)100);
-       // ESP_LOGI(ISOTP_TASKS_TAG, "isotp_send_queue_task: sending message with %d size (rx id: %08x / tx id: %08x)", ((unsigned int)unsigmsg.msg_length, (unsigned int)msg.rx_id, (unsigned int)msg.tx_id);
+        ESP_LOGI(ISOTP_TASKS_TAG, "isotp_send_queue_task: sending message with %d size (rx id: %08x / tx id: %08x)", (unsigned int)msg.msg_length, (unsigned int)msg.rx_id, (unsigned int)msg.tx_id);
         // flipped
         int isotp_link_container_index = find_isotp_link_container_index_by_send_arbitration_id(msg.tx_id);
         assert(isotp_link_container_index != -1);

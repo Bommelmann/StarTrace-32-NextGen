@@ -3,16 +3,14 @@ menu "Startrace Custom Configuration"
     menu "CAN Config"
     config EXAMPLE_TX_GPIO_NUM
         int "TX GPIO number"
-        default 21 if IDF_TARGET_ESP32
-        default 0
+        default 43
         help
             This option selects the GPIO pin used for the TX signal. Connect the
             TX signal to your transceiver.
 
     config EXAMPLE_RX_GPIO_NUM
         int "RX GPIO number"
-        default 22 if IDF_TARGET_ESP32
-        default 2
+        default 44
         help
             This option selects the GPIO pin used for the RX signal. Connect the
             RX signal to your transceiver.
@@ -62,6 +60,15 @@ menu "Startrace Custom Configuration"
     config EXAMPLE_PIN_CS
         int "CS GPIO number"
         default 10
+    endmenu
+
+    menu "UDS Config"
+
+        config P2_CLIENT
+        int "P2 Client"
+        default 2000
+        help
+            This option defines the timeout for a client to wait for a response from the server.
     endmenu
 
 endmenu
