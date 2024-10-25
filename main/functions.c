@@ -46,10 +46,10 @@ void log_hex_data(const char* tag, const uint8_t* data, size_t length) {
 
 
 void log_send_message(const char* tag, const send_message_can_t* msg) {
-    ESP_LOGD(tag, "send_message_t:");
-    ESP_LOGD(tag, "  tx_id: 0x%08" PRIX32, msg->tx_id); // Verwenden von PRIX32 für uint32_t
-    ESP_LOGD(tag, "  msg_length: %" PRIi32, msg->msg_length); // Verwenden von PRIi32 für int32_t
-    ESP_LOGD(tag, "  reuse_buffer: %s", msg->reuse_buffer ? "true" : "false");
+    ESP_LOGI(tag, "send_message_t:");
+    ESP_LOGI(tag, "  tx_id: 0x%08" PRIX32, msg->tx_id); // Verwenden von PRIX32 für uint32_t
+    ESP_LOGI(tag, "  msg_length: %" PRIi32, msg->msg_length); // Verwenden von PRIi32 für int32_t
+    ESP_LOGI(tag, "  reuse_buffer: %s", msg->reuse_buffer ? "true" : "false");
 
     char buffer[3 * msg->msg_length + 1]; // 2 Zeichen pro Byte + 1 Leerzeichen + Null-Terminierung
     char* ptr = buffer;
@@ -58,5 +58,5 @@ void log_send_message(const char* tag, const send_message_can_t* msg) {
         ptr += sprintf(ptr, "%02X ", msg->buffer[i]);
     }
 
-    ESP_LOGD(tag, "  buffer: %s", buffer);
+    ESP_LOGI(tag, "  buffer: %s", buffer);
 }

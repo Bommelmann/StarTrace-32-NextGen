@@ -19,6 +19,12 @@ typedef struct uds_message_string
 {
     int32_t msg_length;
     char *uds_string;
+    enum {
+        WEBSOCKET,
+        BLE,
+        HTTP,
+        INTERNAL
+    }Sending_Instance;
 } uds_message_string_t;
 
 

@@ -78,17 +78,40 @@ IsoTpLinkContainer *received_container;
                         if (xQueueReceive(handle_uds_request_queue_container, &received_container, EXAMPLE_P2_CLIENT) == pdPASS) {
                     
                         //Print out received data                                   
-                        ESP_LOGI(UDS_TAG, "Received ISO-TP message with length: %04X", received_container->link.receive_size);
-                            for (int i = 0; i < received_container->link.receive_size; i++) {
-                                ESP_LOGI(UDS_TAG, "payload_buf[%d] = %02x", i, received_container->payload_buf[i]);
+                            ESP_LOGI(UDS_TAG, "Received ISO-TP message with length: %04X", received_container->link.receive_size);
+                                for (int i = 0; i < received_container->link.receive_size; i++) {
+                                    ESP_LOGI(UDS_TAG, "payload_buf[%d] = %02x", i, received_container->payload_buf[i]);
+                                }
+                            
+                            // Check if the response fits to the request
+                            //First Check for the correct ID
+                            //ESP_LOGI(UDS_TAG, "Received container: send_arbitration_id = 0x%08X", (unsigned int)received_container->link.send_arbitration_id);
+                            //ESP_LOGI(UDS_TAG, "uds_message_hex_queue_send.tx_id = 0x%08X", (unsigned int)uds_message_hex_queue_send.tx_id);
+                            if (received_container->link.send_arbitration_id == uds_message_hex_queue_send.tx_id) {
+                                //Then check for the correct payload
+                                //First check if it is a negative response
+                                    ESP_LOGI(UDS_TAG, "received_container->payload_buf[0] = %02x", received_container->payload_buf[0]);
+                                    ESP_LOGI(UDS_TAG, "uds_message_hex_queue_send.buffer[1] = %02x", uds_message_hex_queue_send.buffer[1]);
+                                    ESP_LOGI(UDS_TAG, "uds_message_hex_queue_send.buffer[1] | 0x40  = %02x", uds_message_hex_queue_send.buffer[1] | 0x40 );
+                                    if(received_container->payload_buf[0] == 0x7f) {
+                                        //Then check if the subsequent bytes match the request
+                                        if(received_container->payload_buf[1] == uds_message_hex_queue_send.buffer[0]){
+                                            ESP_LOGI(UDS_TAG, "NRC: Received ISO-TP message matches request");
+                                        
+                                        }
+                                    //Secondly check if it is a positive response
+
+                                    }else if(received_container->payload_buf[0] == (uds_message_hex_queue_send.buffer[0] | 0x40 )){
+                                        ESP_LOGI(UDS_TAG, "Positive Response: Received ISO-TP message matches request");
+                                    }
+                            }        
+
+                            if (uds_message_hex_queue_send.buffer != NULL) {
+                                free(uds_message_hex_queue_send.buffer);
                             }
-                        } 
-        }        
+                        }        
 
-        if (uds_message_hex_queue_send.buffer != NULL) {
-            free(uds_message_hex_queue_send.buffer);
-        }
-
+        }                  
     }
 }
 
