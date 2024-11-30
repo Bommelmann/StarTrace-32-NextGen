@@ -35,13 +35,13 @@ void InitializeFilesystem(void)
         ESP_LOGE(TAG, "Failed to get LittleFS partition information (%s)", esp_err_to_name(ret));
         esp_littlefs_format(conf.partition_label);
     } else {
-        ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
+        ESP_LOGD(TAG, "Partition size: total: %d, used: %d", total, used);
     }
 
 /*
     // Use POSIX and C standard library functions to work with files.
     // First create a file.
-    ESP_LOGI(TAG, "Opening file");
+    ESP_LOGD(TAG, "Opening file");
     FILE *f = fopen("/littlefs/hello.txt", "w");
     if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file for writing");
@@ -49,7 +49,7 @@ void InitializeFilesystem(void)
     }
     fprintf(f, "Hello World!\n");
     fclose(f);
-    ESP_LOGI(TAG, "File written");
+    ESP_LOGD(TAG, "File written");
 
     // Check if destination file exists before renaming
     struct stat st;
@@ -59,14 +59,14 @@ void InitializeFilesystem(void)
     }
 
     // Rename original file
-    ESP_LOGI(TAG, "Renaming file");
+    ESP_LOGD(TAG, "Renaming file");
     if (rename("/littlefs/hello.txt", "/littlefs/foo.txt") != 0) {
         ESP_LOGE(TAG, "Rename failed");
         return;
     }
 
     // Open renamed file for reading
-    ESP_LOGI(TAG, "Reading file");
+    ESP_LOGD(TAG, "Reading file");
     f = fopen("/littlefs/foo.txt", "r");
     if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file for reading");
@@ -81,9 +81,9 @@ void InitializeFilesystem(void)
     if (pos) {
         *pos = '\0';
     }
-    ESP_LOGI(TAG, "Read from file: '%s'", line);
+    ESP_LOGD(TAG, "Read from file: '%s'", line);
 
-    ESP_LOGI(TAG, "Reading from flashed filesystem example.txt");
+    ESP_LOGD(TAG, "Reading from flashed filesystem example.txt");
     f = fopen("/littlefs/example.txt", "r");
     if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file for reading");
@@ -96,11 +96,11 @@ void InitializeFilesystem(void)
     if (pos) {
         *pos = '\0';
     }
-    ESP_LOGI(TAG, "Read from file: '%s'", line);
+    ESP_LOGD(TAG, "Read from file: '%s'", line);
 
     // All done, unmount partition and disable LittleFS
     esp_vfs_littlefs_unregister(conf.partition_label);
-    ESP_LOGI(TAG, "LittleFS unmounted");
+    ESP_LOGD(TAG, "LittleFS unmounted");
 
     */
 }

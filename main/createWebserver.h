@@ -4,6 +4,7 @@
 #include <sys/unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include "cJSON.h"
 
 #include "esp_err.h"
 #include "esp_log.h"
@@ -11,6 +12,8 @@
 #include "esp_vfs.h"
 #include "esp_spiffs.h"
 #include "esp_http_server.h"
+#include "messages.h"
+
 
 esp_err_t hello_get_handler(httpd_req_t *req);
 
@@ -41,3 +44,11 @@ struct file_server_data {
 
 extern uint8_t Diag_Resp [8];
 
+struct async_resp_arg {
+    httpd_handle_t hd;
+    int fd;
+};
+
+extern httpd_handle_t server;
+extern QueueHandle_t handle_uds_request_queue;
+extern QueueHandle_t handle_uds_response_queue;

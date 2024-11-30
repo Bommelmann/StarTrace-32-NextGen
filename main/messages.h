@@ -17,14 +17,16 @@ typedef struct send_message
 
 typedef struct uds_message_string
 {
-    int32_t msg_length;
-    char *uds_string;
+    int32_t uds_request_length;
+    char *uds_request_string;
+    int32_t uds_response_length;
+    char *uds_response_string;
     enum {
         WEBSOCKET,
         BLE,
         HTTP,
         INTERNAL
-    }Sending_Instance;
+    }Client_Interface;
 } uds_message_string_t;
 
 

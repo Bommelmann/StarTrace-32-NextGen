@@ -286,7 +286,7 @@ int isotp_send_with_id(IsoTpLink *link, uint32_t id, const uint8_t payload[], ui
                 link->send_timer_bs = isotp_user_get_ms() + ISO_TP_DEFAULT_RESPONSE_TIMEOUT;
                 link->send_protocol_result = ISOTP_PROTOCOL_RESULT_OK;
                 link->send_status = ISOTP_SEND_STATUS_INPROGRESS;
-                ESP_LOGI(ISOTP_TAG, "link->send_status set to InNPROGRESS");
+                ESP_LOGD(ISOTP_TAG, "link->send_status set to InNPROGRESS");
                 
 
                 /* send consecutive frames */
@@ -301,7 +301,7 @@ int isotp_send_with_id(IsoTpLink *link, uint32_t id, const uint8_t payload[], ui
                 /* check if all data sent */
                 if (link->send_offset >= link->send_size) {
                     link->send_status = ISOTP_SEND_STATUS_IDLE;
-                    ESP_LOGI(ISOTP_TAG,"link->send_status set to IDLE");
+                    ESP_LOGD(ISOTP_TAG,"link->send_status set to IDLE");
                 }
             }
 
@@ -447,7 +447,7 @@ void isotp_on_can_message(IsoTpLink *link, uint8_t *data, uint8_t len) {
                 if (PCI_FLOW_STATUS_OVERFLOW == message.as.flow_control.FS) {
                     link->send_protocol_result = ISOTP_PROTOCOL_RESULT_BUFFER_OVFLW;
                     link->send_status = ISOTP_SEND_STATUS_ERROR;
-                    ESP_LOGI(ISOTP_TAG,"link->send_status set to ERROR");
+                    ESP_LOGD(ISOTP_TAG,"link->send_status set to ERROR");
                 }
 
                 /* wait */
@@ -457,7 +457,7 @@ void isotp_on_can_message(IsoTpLink *link, uint8_t *data, uint8_t len) {
                     if (link->send_wtf_count > ISO_TP_MAX_WFT_NUMBER) {
                         link->send_protocol_result = ISOTP_PROTOCOL_RESULT_WFT_OVRN;
                         link->send_status = ISOTP_SEND_STATUS_ERROR;
-                        ESP_LOGI(ISOTP_TAG,"link->send_status set to ERROR");
+                        ESP_LOGD(ISOTP_TAG,"link->send_status set to ERROR");
                     }
                 }
 
@@ -509,7 +509,7 @@ void isotp_init_link(IsoTpLink *link, uint32_t send_arbitration_id, uint32_t rec
     memset(link, 0, sizeof(*link));
     link->receive_status = ISOTP_RECEIVE_STATUS_IDLE;
     link->send_status = ISOTP_SEND_STATUS_IDLE;
-    ESP_LOGI(ISOTP_TAG,"link->send_status set to IDLE");
+    ESP_LOGD(ISOTP_TAG,"link->send_status set to IDLE");
     link->send_arbitration_id = send_arbitration_id;
     link->send_buffer = sendbuf;
     link->send_buf_size = sendbufsize;
@@ -546,11 +546,11 @@ void isotp_poll(IsoTpLink *link) {
                 /* check if send finish */
                 if (link->send_offset >= link->send_size) {
                     link->send_status = ISOTP_SEND_STATUS_IDLE;
-                    ESP_LOGI(ISOTP_TAG,"link->send_status set to IDLE");
+                    ESP_LOGD(ISOTP_TAG,"link->send_status set to IDLE");
                 }
             } else {
                 link->send_status = ISOTP_SEND_STATUS_ERROR;
-                ESP_LOGI(ISOTP_TAG,"link->send_status set to ERROR");
+                ESP_LOGD(ISOTP_TAG,"link->send_status set to ERROR");
             }
         }
 
@@ -558,7 +558,7 @@ void isotp_poll(IsoTpLink *link) {
         if (IsoTpTimeAfter(isotp_user_get_ms(), link->send_timer_bs)) {
             link->send_protocol_result = ISOTP_PROTOCOL_RESULT_TIMEOUT_BS;
             link->send_status = ISOTP_SEND_STATUS_ERROR;
-            ESP_LOGI(ISOTP_TAG,"link->send_status set to ERROR");
+            ESP_LOGD(ISOTP_TAG,"link->send_status set to ERROR");
         }
     }
 

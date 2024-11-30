@@ -39,9 +39,9 @@ void isotp_processing_task(void *arg)
         // if it is time to send fully received + parsed ISO-TP data over BLE and/or websocket
         if (ISOTP_RET_OK == ret) {
             /*
-            ESP_LOGI(ISOTP_TASKS_TAG, "Received ISO-TP message with length: %04X", out_size);
+            ESP_LOGD(ISOTP_TASKS_TAG, "Received ISO-TP message with length: %04X", out_size);
             for (int i = 0; i < out_size; i++) {
-                ESP_LOGI(ISOTP_TASKS_TAG, "payload_buf[%d] = %02x", i, payload_buf[i]);
+                ESP_LOGD(ISOTP_TASKS_TAG, "payload_buf[%d] = %02x", i, payload_buf[i]);
             }
             */
             //Send correctly received data to handle_uds_request_task
@@ -50,7 +50,7 @@ void isotp_processing_task(void *arg)
             }
         }
         else if(ISOTP_RET_NO_DATA== ret){
-            ESP_LOGI(ISOTP_TASKS_TAG, "No data received in task: %s", taskname);
+            ESP_LOGD(ISOTP_TASKS_TAG, "No data received in task: %s", taskname);
 
 
         
@@ -80,7 +80,7 @@ void isotp_send_queue_task(void *arg)
         send_message_can_t msg;
         xQueueReceive(isotp_send_message_queue, &msg, portMAX_DELAY);
         xSemaphoreTake(isotp_mutex, (TickType_t)100);
-        ESP_LOGI(ISOTP_TASKS_TAG, "isotp_send_queue_task: sending message with %d size (rx id: %08x / tx id: %08x)", (unsigned int)msg.msg_length, (unsigned int)msg.rx_id, (unsigned int)msg.tx_id);
+        ESP_LOGD(ISOTP_TASKS_TAG, "isotp_send_queue_task: sending message with %d size (rx id: %08x / tx id: %08x)", (unsigned int)msg.msg_length, (unsigned int)msg.rx_id, (unsigned int)msg.tx_id);
         // flipped
         int isotp_link_container_index = find_isotp_link_container_index_by_send_arbitration_id(msg.tx_id);
         assert(isotp_link_container_index != -1);
@@ -90,7 +90,7 @@ void isotp_send_queue_task(void *arg)
         if (msg.reuse_buffer == false) {
             free(msg.buffer);
         } else {
-            ESP_LOGI(ISOTP_TASKS_TAG, "isotp_send_queue_task: reusing buffer");
+            ESP_LOGD(ISOTP_TASKS_TAG, "isotp_send_queue_task: reusing buffer");
         }
         xSemaphoreGive(isotp_mutex);
         xSemaphoreGive(isotp_link_container->wait_for_isotp_data_sem);

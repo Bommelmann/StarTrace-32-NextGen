@@ -1,72 +1,263 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menü Beispiel</title>
+    <title>Menu with JSON Fetch</title>
     <style>
+        /* Main Layout */
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
         }
-        .sidebar {
-            height: 100%;
+        .menu {
             width: 200px;
-            position: fixed;
-            left: 0;
-            top: 0;
-            background-color: #111;
-            padding-top: 20px;
+            background-color: #333;
+            height: 100vh;
+            padding: 0;
         }
-        .sidebar a {
-            padding: 10px 15px;
-            text-decoration: none;
-            font-size: 18px;
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu ul li {
+            padding: 15px;
+            text-align: center;
+        }
+        .menu ul li a {
             color: white;
+            text-decoration: none;
             display: block;
         }
-        .sidebar a:hover {
+        .menu ul li a:hover {
             background-color: #575757;
         }
         .content {
-            margin-left: 220px;
+            flex-grow: 1;
             padding: 20px;
         }
-        .hidden {
+        .content-section.hidden {
             display: none;
+        }
+
+        /* JSON Output Styling */
+        #json-output {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            width: 50%;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+        }
+        .modal-content button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <a href="#" id="menu-item">Identification</a>
-        <div id="content" class="hidden">
-            <p id="date"></p>
+
+    <!-- Left Menu -->
+    <div class="menu">
+        <ul>
+            <li><a href="#" onclick="showContent('home')">Home</a></li>
+            <li><a href="#" onclick="showContent('identification')">Identification</a></li>
+            <li><a href="#" onclick="showContent('fault-codes')">Fault Codes</a></li>
+            <li><a href="#" onclick="showContent('set-up')">Set Up</a></li>
+        </ul>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content">
+        <div id="home" class="content-section">
+            <h1>Welcome to the Home Page</h1>
+        </div>
+        <div id="identification" class="content-section hidden">
+            <h1>Identification</h1>
+            <button onclick="fetchJson()">Fetch JSON</button>
+            <div id="json-output">JSON output will appear here...</div>
+        </div>
+        <div id="fault-codes" class="content-section hidden">
+            <h1>Fault Codes</h1>
+            <p>Here you can view fault codes.</p>
+        </div>
+        <div id="set-up" class="content-section hidden">
+            <h1>Set Up</h1>
+            <p>Settings and configuration options Baby.</p>
         </div>
     </div>
-    <div class="content">
-        <h2>Willkommen!</h2>
-        <p>Wählen Sie einen Menüpunkt aus.</p>
+
+    <!-- Disclaimer Modal -->
+    <div id="disclaimer-modal" class="modal">
+        <div class="modal-content">
+            <h2>Disclaimer! Warning!</h2>
+            <p>YOUR USE OF THIS SOFTWARE MUST BE DONE WITH CAUTION AND A FULL UNDERSTANDING OF THE RISKS!</p>
+            <p>THIS WARNING IS PRESENTED TO INFORM YOU THAT THE OPERATION OF THIS SOFTWARE MAY BE DANGEROUS. YOUR ACTIONS CAN INFLUENCE THE BEHAVIOR OF A CAN-BASED DISTRIBUTED EMBEDDED SYSTEM, AND DEPENDING ON THE APPLICATION, THE CONSEQUENCES OF YOUR IMPROPER ACTIONS COULD CAUSE SERIOUS OPERATIONAL MALFUNCTION, DAMAGE TO EQUIPMENT, AND PHYSICAL INJURY TO YOURSELF AND OTHERS.</p>
+            <button onclick="acceptDisclaimer()">I accept</button>
+        </div>
     </div>
 
-    <script>
-        document.getElementById('menu-item').addEventListener('click', function() {
-            var content = document.getElementById('content');
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                fetchDate();
-            } else {
-                content.classList.add('hidden');
-            }
-        });
+<!-- ECU Selection Modal -->
+<div id="ecu-modal" class="modal">
+    <div class="modal-content">
+        <h2>Choose your ECU Configuration</h2>
+        <div>
+            <!-- Erste Konfiguration -->
+            <label>
+                <input type="radio" id="standard-config" name="ecu-config" value="Standard" onchange="onConfigChange('Standard')">
+                Standard Configuration MB Powertrain (OM4xx/OM9xx)
+            </label>
+            <p style="margin-left: 20px; font-size: 0.9em; color: gray;">CPC, MCM, ACM</p>
 
-        function fetchDate() {
+            <!-- Zweite Konfiguration -->
+            <label>
+                <input type="radio" id="extended-config" name="ecu-config" value="Extended" onchange="onConfigChange('Extended')">
+                Extended Configuration MB Powertrain (OM4xx/OM9xx)
+            </label>
+            <p style="margin-left: 20px; font-size: 0.9em; color: gray;">CPC, MCM, ACM, TCM</p>
+        </div>
+
+        <!-- Weiter-Button -->
+        <button onclick="proceedToIdentification()">Continue</button>
+    </div>
+</div>
+
+
+    <script>
+        // Display disclaimer modal on first load
+        window.onload = function() {
+            console.log("Script loaded");
+            document.getElementById('disclaimer-modal').style.display = 'flex';
+            getInitialAssets();
+            DiagnosticRequest();
+                        
+        };
+
+        // Function to handle disclaimer acceptance
+        function acceptDisclaimer() {
+            document.getElementById('disclaimer-modal').style.display = 'none';
+            document.getElementById('ecu-modal').style.display = 'flex';
+        }
+
+        // Function to proceed to the Identification page
+        function proceedToIdentification() {
+            // Get selected ECU values
+            const selectedECUs = Array.from(document.querySelectorAll('input[name="ecu"]:checked'))
+                                      .map(input => input.value);
+            
+            if (selectedECUs.length === 0) {
+                alert('Please select at least one ECU to continue.');
+            } else {
+                // Close ECU selection modal and navigate to "Identification" section
+                document.getElementById('ecu-modal').style.display = 'none';
+                showContent('identification');
+            }
+        }
+
+        // Function to show selected content and hide others
+        function showContent(section) {
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(section).classList.remove('hidden');
+        }
+
+        // Function to fetch JSON from server
+        function fetchJson() {
             fetch('/get-date')
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('date').innerText = data.date;
+                    document.getElementById('json-output').textContent = JSON.stringify(data);
                 })
-                .catch(error => console.error('Error fetching date:', error));
+                .catch(error => {
+                    document.getElementById('json-output').textContent = 'Error fetching JSON';
+                    console.error('Error:', error);
+                });
         }
+
+        function DiagnosticRequest (){
+            requestData = {
+                "request" : "18DA00F122F100",  // Beispiel-Request
+                "response": ""
+                };
+                link ="/uds_request?"
+                fetch(link,{
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData) // JSON-Daten in einen String konvertieren
+                })
+                .then(response => response.json())  // Antwort als JSON parsen
+                .then(data => {
+                    console.log('Antwort vom Server:', data);  // Serverantwort verarbeiten
+                })
+                .catch(error => {
+                    console.error('Fehler bei der Anfrage:', error);
+                });
+
+
+        }
+
+        function getInitialAssets(){
+
+            const link = "/config.json";
+
+                // GET-Anfrage senden
+                fetch(link, {
+                    method: 'GET', // Methode ist GET
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP-Error! Status: ${response.status}`);
+                    }
+                    return response.json();  // Antwort als JSON parsen
+                })
+                .then(data => {
+                    console.log('Antwort vom Server:', data);  // Serverantwort verarbeiten
+                })
+                .catch(error => {
+                    console.error('Fehler bei der Anfrage:', error);
+                });
+
+
+        }
+
+       
     </script>
+
 </body>
 </html>

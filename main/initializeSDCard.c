@@ -2,7 +2,7 @@
 
 
 
-static const char *TAG = "example_mount";
+static const char *TAG = "initializeSDCard.c";
 
 
 esp_err_t initializeSDCard()

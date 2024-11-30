@@ -41,16 +41,52 @@ QueueHandle_t websocket_send_queue;
 QueueHandle_t tx_task_queue;
 QueueHandle_t isotp_send_message_queue;
 QueueHandle_t handle_uds_request_queue;
+QueueHandle_t handle_uds_response_queue;
 QueueHandle_t handle_uds_request_queue_container;
 
+httpd_handle_t server = NULL;
+
 uint8_t Diag_Resp [8];
+
+static esp_err_t stop_webserver(httpd_handle_t server)
+{
+    // Stop the httpd server
+    return httpd_stop(server);
+}
+
+static void disconnect_handler(void* arg, esp_event_base_t event_base,
+                               int32_t event_id, void* event_data)
+{
+    httpd_handle_t* server = (httpd_handle_t*) arg;
+    if (*server) {
+        ESP_LOGI(MAIN_TAG, "Stopping webserver");
+        if (stop_webserver(*server) == ESP_OK) {
+            *server = NULL;
+        } else {
+            ESP_LOGE(MAIN_TAG, "Failed to stop http server");
+        }
+    }
+}
+
+static void connect_handler(void* arg, esp_event_base_t event_base,
+                            int32_t event_id, void* event_data)
+{
+    httpd_handle_t* server = (httpd_handle_t*) arg;
+    if (*server == NULL) {
+        ESP_LOGI(MAIN_TAG, "Starting webserver");
+        start_webserver();
+    }
+}
+
+
+
 
 void app_main(void)
 {
 
     //Set Log Level ###################################
     //#################################################
-    esp_log_level_set("*", ESP_LOG_INFO);  
+    esp_log_level_set("*", ESP_LOG_DEBUG);  
 
 
     //INIT WIFI #######################################
@@ -59,6 +95,11 @@ void app_main(void)
     InitializeFilesystem();
     initializeSDCard();
     InitWifi();
+    /* Register event handlers to stop the server when Wi-Fi or Ethernet is disconnected,
+     * and re-start it upon connection.*/
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
+
     start_webserver();
 
     //Create Queues ###################################
@@ -75,6 +116,10 @@ void app_main(void)
         //items of the data type uds_message_string_t
         // between the tasks "XY" and "handle_uds_request_task"
     handle_uds_request_queue = xQueueCreate(128, sizeof(uds_message_string_t));
+    //handle_uds_response_queue is for the transmission of:
+        //items of the data type uds_message_string_t
+        // between the tasks "handle_uds_request_task" andy "XY"
+    handle_uds_response_queue = xQueueCreate(128, sizeof(uds_message_string_t));
     //handle_uds_request_queue_container is for the transmission of:
         //items of the data type IsoTpLinkContainer
         // between the tasks "isotp_processing_task" and "handle_uds_request_task"
@@ -131,12 +176,12 @@ void app_main(void)
 
             //Test
             uds_message_string_t uds_message_string_queue_send;
-            uds_message_string_queue_send.msg_length = 14;
-            uds_message_string_queue_send.uds_string = malloc(15);
-            strcpy(uds_message_string_queue_send.uds_string, "18DA00F122F100");
+            uds_message_string_queue_send.uds_request_length = 14;
+            uds_message_string_queue_send.uds_request_string = malloc(15);
+            strcpy(uds_message_string_queue_send.uds_request_string, "18DA00F122F100");
             //Test: Send in uds queue
            
-           xQueueSend(handle_uds_request_queue, &uds_message_string_queue_send, portMAX_DELAY);
+           //xQueueSend(handle_uds_request_queue, &uds_message_string_queue_send, portMAX_DELAY);
     }
 
     // lock done_sem
