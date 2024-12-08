@@ -15,7 +15,8 @@
       "rx_pin": 4,
       "tx_pin": 5,
       "baudrate": 250000,
-      "testerAddress": 241
+      "testerAddress": 241,
+      "ID_length_bit": 29
     },
     "devices": {
       "cpc": true,
@@ -27,106 +28,78 @@
       {
         "SA": 0,
         "shortLabel": "CPC",
-        "automaticConnect": true,
         "DiagVersionService": {
           "ComService" : "22F100",
-          "Datatypes":[
-            {
-              "Name" : "Variant",
-              "BytePos" : "4",
-              "BitPos"  : "0",
-              "ByteLength": "1",
-              "BitLength": "8",
-              "ConvSelector": "CONVERSION_RAW (7)"
-            },
-            {
-            "Name" : "Version",
-            "BytePos" : "5",
+          "Datatypes":            
+          {
+            "Name" : "Variant_Version",
+            "BytePos" : "4",
             "BitPos"  : "0",
-            "ByteLength": "1",
-            "BitLength": "8",
+            "ByteLength": "2",
+            "BitLength": "16",
             "ConvSelector": "CONVERSION_RAW (7)"
-            }
-          ]
-        }        
+          }
+        },
+        "DetectedDiagVersion":"",
+        "ECUDetected": false,
+        "AutomaticConnect": true        
       },
       {
         "SA": 1,
         "shortLabel": "MCM",
-        "automaticConnect": true,
         "DiagVersionService": {
           "ComService" : "22F100",
-          "Datatypes":[
-            {
-              "Name" : "Variant",
-              "BytePos" : "4",
-              "BitPos"  : "0",
-              "ByteLength": "1",
-              "BitLength": "8",
-              "ConvSelector": "CONVERSION_RAW (7)"
-            },
-            {
-            "Name" : "Version",
-            "BytePos" : "5",
+          "Datatypes":            
+          {
+            "Name" : "Variant_Version",
+            "BytePos" : "4",
             "BitPos"  : "0",
-            "ByteLength": "1",
-            "BitLength": "8",
+            "ByteLength": "2",
+            "BitLength": "16",
             "ConvSelector": "CONVERSION_RAW (7)"
-            }
-          ]
-        }  
+          }
+        },
+        "DetectedDiagVersion":"",
+        "ECUDetected": false,
+        "AutomaticConnect": true  
       },
       {
         "SA": 3,
         "shortLabel": "TCM",
-        "automaticConnect": false,
         "DiagVersionService": {
           "ComService" : "22F100",
-          "Datatypes":[
+          "Datatypes":
             {
-              "Name" : "Variant",
+              "Name" : "Variant_Version",
               "BytePos" : "4",
               "BitPos"  : "0",
-              "ByteLength": "1",
-              "BitLength": "8",
+              "ByteLength": "2",
+              "BitLength": "16",
               "ConvSelector": "CONVERSION_RAW (7)"
-            },
-            {
-            "Name" : "Version",
-            "BytePos" : "5",
-            "BitPos"  : "0",
-            "ByteLength": "1",
-            "BitLength": "8",
-            "ConvSelector": "CONVERSION_RAW (7)"
             }
-          ]
-        }  
+      },
+        "DetectedDiagVersion":"",
+        "ECUDetected": false,
+        "AutomaticConnect": true
       },
       {
         "SA": 61,
         "shortLabel": "ACM",
-        "automaticConnect": false,
         "DiagVersionService": {
           "ComService" : "22F100",
-          "Datatypes":[
-            {
-              "Name" : "Variant",
-              "BytePos" : "4",
-              "BitPos"  : "0",
-              "ByteLength": "1",
-              "BitLength": "8",
-              "ConvSelector": "CONVERSION_RAW (7)"
-            },
-            {
-            "Name" : "Version",
-            "BytePos" : "5",
+          "Datatypes":            
+          {
+            "Name" : "Variant_Version",
+            "BytePos" : "4",
             "BitPos"  : "0",
-            "ByteLength": "1",
-            "BitLength": "8",
+            "ByteLength": "2",
+            "BitLength": "16",
             "ConvSelector": "CONVERSION_RAW (7)"
-            }
-          ]
-        }  
+          }
+        },
+        "DetectedDiagVersion":"",
+        "ECUDetected": false,
+        "AutomaticConnect": true  
       }
     ],
     "rtc": {

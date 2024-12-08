@@ -58,6 +58,16 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
         ESP_LOGI(TAG_STA, "Station started");
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        wifi_event_sta_disconnected_t *event = (wifi_event_sta_disconnected_t *) event_data;
+        ESP_LOGI(TAG_STA, "Station disconnected, reason:%d", event->reason);
+        if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY) {
+            esp_wifi_connect();
+            s_retry_num++;
+            ESP_LOGI(TAG_STA, "Retry to connect to the AP");
+        } else {
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
         ESP_LOGI(TAG_STA, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
@@ -65,6 +75,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
+
 
 /* Initialize soft AP */
 esp_netif_t *wifi_init_softap(void)
@@ -125,10 +136,10 @@ esp_netif_t *wifi_init_sta(void)
     return esp_netif_sta;
 }
 
-static void wifi_timeout_handler(void *arg)
-{
-    xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-}
+// static void wifi_timeout_handler(void *arg)
+// {
+//     xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+// }
 
 
 void InitWifi(void){
@@ -175,14 +186,14 @@ void InitWifi(void){
     /* Start WiFi */
     ESP_ERROR_CHECK(esp_wifi_start() );
 
-        /* Start the timeout timer */
-    const esp_timer_create_args_t timer_args = {
-        .callback = &wifi_timeout_handler,
-        .name = "wifi_timeout"
-    };
-    esp_timer_handle_t timer;
-    ESP_ERROR_CHECK(esp_timer_create(&timer_args, &timer));
-    ESP_ERROR_CHECK(esp_timer_start_once(timer, 5000000)); // 30 seconds timeout
+    //     /* Start the timeout timer */
+    // const esp_timer_create_args_t timer_args = {
+    //     .callback = &wifi_timeout_handler,
+    //     .name = "wifi_timeout"
+    // };
+    // esp_timer_handle_t timer;
+    // ESP_ERROR_CHECK(esp_timer_create(&timer_args, &timer));
+    // ESP_ERROR_CHECK(esp_timer_start_once(timer, 5000000)); // 30 seconds timeout
 
     /*
      * Wait until either the connection is established (WIFI_CONNECTED_BIT) or

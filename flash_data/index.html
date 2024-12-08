@@ -137,6 +137,12 @@
         .close-btn:hover {
             color: #e60000; /* Rote Farbe, wenn man mit der Maus drüber geht */
         }
+        /* Stil für den grünen Haken */
+        .success-icon {
+            color: green;
+            font-size: 120px;
+            margin: 0 auto;
+        }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -188,12 +194,13 @@
     </div>
 
     <!-- ECU SCAN Modal -->
-    <div id="ecu-scan-modal" class="modal" >
+    <div id="ecu-scan-modal" class="modal">
         <div class="modal-content">
-            <h2>Startrace is scanning for ECUs</h2>
-            <div class="loading-icon"></div>
+            <h2 id="ecu-scan-title">Startrace is scanning for ECUs</h2>
+            <div id="ecu-scan-icon" class="loading-icon"></div>
         </div>
     </div>
+
 
     <!-- Modal für Fehlernachricht -->
     <div id="error-modal" class="errormodal">
@@ -206,7 +213,7 @@
         </div>
     </div>
 
-
+    
 
     <script>
  
@@ -227,6 +234,9 @@
             const disclaimer_continue = document.getElementById('disclaimer-continue');
             //Get Variable for Scanning Modal
             const scanning_modal=document.getElementById('ecu-scan-modal');
+            //Get Variable for Other variable ECU-Scan Stuff
+            const ecuScanTitle = document.getElementById('ecu-scan-title');
+            const ecuScanIcon = document.getElementById('ecu-scan-icon');
             disclaimer_modal.style.display = 'flex';
             disclaimer_continue.addEventListener('click', async function () {
             // Disclaimer-Modal schließen
@@ -234,6 +244,13 @@
             // Scanning-Modal öffnen
             scanning_modal.style.display = 'flex';
             await ScanECUs();
+            ecuScanTitle.textContent = 'ECU Scan Complete';
+            ecuScanIcon.classList.remove('loading-icon');
+            ecuScanIcon.classList.add('success-icon');
+            ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
+            //Grüner Haken soll gesehen werden
+            await new Promise(resolve => setTimeout(resolve, 500));
+            scanning_modal.style.display = 'none';
             
             });
             
