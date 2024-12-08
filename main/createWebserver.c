@@ -31,7 +31,7 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     }
     buf[ret] = '\0';
 
-    ESP_LOGI(TAG, "JSON-Daten: %s", buf);
+    ESP_LOGD(TAG, "JSON-Daten: %s", buf);
     // Nullterminator hinzufügen, um den Body als String zu behandeln
     
 
@@ -56,15 +56,18 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     uds_rqst_rspns_string.uds_request_length = strlen(uds_rqst_json->valuestring);
     uds_rqst_rspns_string.uds_request_string = malloc(uds_rqst_rspns_string.uds_request_length+1);
     strcpy(uds_rqst_rspns_string.uds_request_string,uds_rqst_json->valuestring);
-    ESP_LOGI(TAG, "RequestData in uds_message_string_t: %s", uds_rqst_rspns_string.uds_request_string);
-    ESP_LOGI(TAG, "RequestLength in uds_message_string_t: %d", (int)uds_rqst_rspns_string.uds_request_length);
+    ESP_LOGD(TAG, "RequestData in uds_message_string_t: %s", uds_rqst_rspns_string.uds_request_string);
+    ESP_LOGD(TAG, "RequestLength in uds_message_string_t: %d", (int)uds_rqst_rspns_string.uds_request_length);
+    ESP_LOGD(TAG, "Sending to handle_uds_request_queue");
     xQueueSend(handle_uds_request_queue, &uds_rqst_rspns_string, portMAX_DELAY);
     xQueueReceive(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY);
-    ESP_LOGI(TAG, "ResponseData in uds_message_string_t: %s", uds_rqst_rspns_string.uds_response_string);
-    ESP_LOGI(TAG, "ResponseLength in uds_message_string_t: %d", (int)uds_rqst_rspns_string.uds_response_length);
+    ESP_LOGD(TAG, "Received from handle_uds_response_queue");
+    ESP_LOGD(TAG, "ResponseData in uds_message_string_t: %s", uds_rqst_rspns_string.uds_response_string);
+    ESP_LOGD(TAG, "ResponseLength in uds_message_string_t: %d", (int)uds_rqst_rspns_string.uds_response_length);
 
     cJSON *uds_rspns_json = cJSON_GetObjectItem(uds_rqst_rspns_json, "response");
     cJSON_SetValuestring(uds_rspns_json,uds_rqst_rspns_string.uds_response_string);
+    ESP_LOGD(TAG, "uds_rspns_json->valuestring: %s", uds_rspns_json->valuestring);
     // Das JSON-Objekt in einen String umwandeln
     char *json_str = cJSON_Print(uds_rqst_rspns_json);
     ESP_LOGI(TAG, "json_str: %s", json_str);
@@ -74,6 +77,7 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     // Objekte freigeben
     free(json_str);
     cJSON_Delete(uds_rqst_rspns_json);
+    free(uds_rqst_rspns_string.uds_request_string);
 
     return ESP_OK;
 }
@@ -303,6 +307,22 @@ esp_err_t start_webserver(void)
             .user_ctx  = server_data
         };
         httpd_register_uri_handler(server, &start_download_uri_config);
+
+        httpd_uri_t start_download_uri_commonfunctions = {
+            .uri       = "/commonfunctions.js",
+            .method    = HTTP_GET,
+            .handler   = start_download_handler,
+            .user_ctx  = server_data
+        };
+        httpd_register_uri_handler(server, &start_download_uri_commonfunctions);
+
+        httpd_uri_t start_download_uri_startupfunctions = {
+            .uri       = "/startupfunctions.js",
+            .method    = HTTP_GET,
+            .handler   = start_download_handler,
+            .user_ctx  = server_data
+        };
+        httpd_register_uri_handler(server, &start_download_uri_startupfunctions);
 
         httpd_uri_t start_download_uri = {
             .uri       = "/",

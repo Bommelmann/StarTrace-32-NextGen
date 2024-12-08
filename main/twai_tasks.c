@@ -18,7 +18,7 @@ void twai_receive_task(void *arg)
         */
         
         // short circuit on low-level traffic
-        if (twai_rx_msg.identifier == 0x18DAF100) {
+        if (twai_rx_msg.identifier == 0x18DAF100||twai_rx_msg.identifier == 0x18DAF101||twai_rx_msg.identifier == 0x18DAF103||twai_rx_msg.identifier == 0x18DAF13D) {
 
             int isotp_link_container_index = find_isotp_link_container_index_by_receive_arbitration_id(twai_rx_msg.identifier);
             if (isotp_link_container_index != -1) {

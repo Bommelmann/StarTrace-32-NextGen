@@ -125,8 +125,14 @@ esp_netif_t *wifi_init_sta(void)
     return esp_netif_sta;
 }
 
+static void wifi_timeout_handler(void *arg)
+{
+    xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+}
+
+
 void InitWifi(void){
-ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     //Initialize NVS
@@ -168,6 +174,15 @@ ESP_ERROR_CHECK(esp_netif_init());
 
     /* Start WiFi */
     ESP_ERROR_CHECK(esp_wifi_start() );
+
+        /* Start the timeout timer */
+    const esp_timer_create_args_t timer_args = {
+        .callback = &wifi_timeout_handler,
+        .name = "wifi_timeout"
+    };
+    esp_timer_handle_t timer;
+    ESP_ERROR_CHECK(esp_timer_create(&timer_args, &timer));
+    ESP_ERROR_CHECK(esp_timer_start_once(timer, 5000000)); // 30 seconds timeout
 
     /*
      * Wait until either the connection is established (WIFI_CONNECTED_BIT) or

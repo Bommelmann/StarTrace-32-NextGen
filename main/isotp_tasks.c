@@ -38,10 +38,11 @@ void isotp_processing_task(void *arg)
         xSemaphoreGive(isotp_mutex);
         // if it is time to send fully received + parsed ISO-TP data over BLE and/or websocket
         if (ISOTP_RET_OK == ret) {
+            
             /*
-            ESP_LOGD(ISOTP_TASKS_TAG, "Received ISO-TP message with length: %04X", out_size);
+            ESP_LOGI(ISOTP_TASKS_TAG, "Received ISO-TP message with length: %04X", out_size);
             for (int i = 0; i < out_size; i++) {
-                ESP_LOGD(ISOTP_TASKS_TAG, "payload_buf[%d] = %02x", i, payload_buf[i]);
+                ESP_LOGI(ISOTP_TASKS_TAG, "payload_buf[%d] = %02x", i, payload_buf[i]);
             }
             */
             //Send correctly received data to handle_uds_request_task

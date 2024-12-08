@@ -26,23 +26,107 @@
     "UDS_devices": [
       {
         "SA": 0,
-        "shortLabel": "cpc",
-        "automaticConnect": true
+        "shortLabel": "CPC",
+        "automaticConnect": true,
+        "DiagVersionService": {
+          "ComService" : "22F100",
+          "Datatypes":[
+            {
+              "Name" : "Variant",
+              "BytePos" : "4",
+              "BitPos"  : "0",
+              "ByteLength": "1",
+              "BitLength": "8",
+              "ConvSelector": "CONVERSION_RAW (7)"
+            },
+            {
+            "Name" : "Version",
+            "BytePos" : "5",
+            "BitPos"  : "0",
+            "ByteLength": "1",
+            "BitLength": "8",
+            "ConvSelector": "CONVERSION_RAW (7)"
+            }
+          ]
+        }        
       },
       {
         "SA": 1,
-        "shortLabel": "mcm",
-        "automaticConnect": true
+        "shortLabel": "MCM",
+        "automaticConnect": true,
+        "DiagVersionService": {
+          "ComService" : "22F100",
+          "Datatypes":[
+            {
+              "Name" : "Variant",
+              "BytePos" : "4",
+              "BitPos"  : "0",
+              "ByteLength": "1",
+              "BitLength": "8",
+              "ConvSelector": "CONVERSION_RAW (7)"
+            },
+            {
+            "Name" : "Version",
+            "BytePos" : "5",
+            "BitPos"  : "0",
+            "ByteLength": "1",
+            "BitLength": "8",
+            "ConvSelector": "CONVERSION_RAW (7)"
+            }
+          ]
+        }  
       },
       {
         "SA": 3,
-        "shortLabel": "tcm",
-        "automaticConnect": false
+        "shortLabel": "TCM",
+        "automaticConnect": false,
+        "DiagVersionService": {
+          "ComService" : "22F100",
+          "Datatypes":[
+            {
+              "Name" : "Variant",
+              "BytePos" : "4",
+              "BitPos"  : "0",
+              "ByteLength": "1",
+              "BitLength": "8",
+              "ConvSelector": "CONVERSION_RAW (7)"
+            },
+            {
+            "Name" : "Version",
+            "BytePos" : "5",
+            "BitPos"  : "0",
+            "ByteLength": "1",
+            "BitLength": "8",
+            "ConvSelector": "CONVERSION_RAW (7)"
+            }
+          ]
+        }  
       },
       {
         "SA": 61,
-        "shortLabel": "acm",
-        "automaticConnect": false
+        "shortLabel": "ACM",
+        "automaticConnect": false,
+        "DiagVersionService": {
+          "ComService" : "22F100",
+          "Datatypes":[
+            {
+              "Name" : "Variant",
+              "BytePos" : "4",
+              "BitPos"  : "0",
+              "ByteLength": "1",
+              "BitLength": "8",
+              "ConvSelector": "CONVERSION_RAW (7)"
+            },
+            {
+            "Name" : "Version",
+            "BytePos" : "5",
+            "BitPos"  : "0",
+            "ByteLength": "1",
+            "BitLength": "8",
+            "ConvSelector": "CONVERSION_RAW (7)"
+            }
+          ]
+        }  
       }
     ],
     "rtc": {

@@ -29,8 +29,8 @@ IsoTpLinkContainer *uds_rspns_isotp;
         // Receive from handle_uds_request_queue and block task as long nothing is received
         if (xQueueReceive(handle_uds_request_queue, &uds_rqst_rspns_string, portMAX_DELAY) == pdPASS) {
             if (uds_rqst_rspns_string.uds_request_string != NULL) {
-                ESP_LOGI(UDS_TAG, "UDS String Length: %d", (int)uds_rqst_rspns_string.uds_request_length);
-                ESP_LOGI(UDS_TAG, "UDS String Content: %s", uds_rqst_rspns_string.uds_request_string);
+                ESP_LOGD(UDS_TAG, "UDS String Length: %d", (int)uds_rqst_rspns_string.uds_request_length);
+                ESP_LOGD(UDS_TAG, "UDS String Content: %s", uds_rqst_rspns_string.uds_request_string);
 
                 // Convert string to hex, Übergabge Parameter 1: uds_message_string_t, Rückgabe Parameter 2: length
                 uds_rqst_hex = hex_string_to_bytes(&uds_rqst_rspns_string, &length);
@@ -72,7 +72,7 @@ IsoTpLinkContainer *uds_rspns_isotp;
             if (xQueueSend(isotp_send_message_queue, &uds_rqst_isotp, portMAX_DELAY) != pdPASS) {
                 ESP_LOGE(UDS_TAG, "Failed to send message to isoTP_message_queue");
             } else {
-                ESP_LOGI(UDS_TAG, "Message sent to isoTP_message_queue");
+                ESP_LOGD(UDS_TAG, "Message sent to isoTP_message_queue");
             }
             ESP_LOGD("P2_LOG", "CONFIG_P2_CLIENT: %d ms", (int)CONFIG_P2_CLIENT);
             ESP_LOGD("P2_LOG", "P2_CLIENT: %d ticks", (int)P2_CLIENT);
@@ -81,15 +81,17 @@ IsoTpLinkContainer *uds_rspns_isotp;
             //Block Task for the timespan of EXAMPLE_P2_CLIENT which is specified in SDK Config
             //If nothing is received within EXAMPLE_P2_CLIENT, the task goes to the else statement
             if (xQueueReceive(handle_uds_request_queue_container, &uds_rspns_isotp, P2_CLIENT) == pdPASS) {
-        
-            //Print out received data                                   
-                ESP_LOGI(UDS_TAG, "Received ISO-TP message with length: %04X", uds_rspns_isotp->link.receive_size);
+                //ESP_LOGI(UDS_TAG, "Received response from isotp_processing_task");
+                //Print out received data                                   
+                ESP_LOGD(UDS_TAG, "Received ISO-TP message with length: %04X", uds_rspns_isotp->link.receive_size);
                     for (int i = 0; i < uds_rspns_isotp->link.receive_size; i++) {
-                        ESP_LOGI(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
+                        ESP_LOGD(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
                     }
                 
                 // Check if the response fits to the request
                 //First Check for the correct ID
+                    ESP_LOGI(UDS_TAG, "uds_rspns_isotp->link.send_arbitration_id: %d", (int)uds_rspns_isotp->link.send_arbitration_id);
+                    ESP_LOGI(UDS_TAG, "uds_rspns_isotp->link.send_arbitration_id: %d", (int)uds_rqst_isotp.tx_id);
                 if (uds_rspns_isotp->link.send_arbitration_id == uds_rqst_isotp.tx_id) {
                     //Then check for the correct payload
                     //First check if it is a negative response
@@ -103,11 +105,12 @@ IsoTpLinkContainer *uds_rspns_isotp;
                                 bytes_to_hex_string(uds_rspns_isotp, &uds_rqst_rspns_string);
                                 ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_request_string: %s", uds_rqst_rspns_string.uds_request_string);
                                 ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_response_string %s", uds_rqst_rspns_string.uds_response_string);
-                                        if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
-                                            ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
-                                        } else {
-                                            ESP_LOGD(UDS_TAG, "Message sent to handle_uds_response_queue");
-                                        }
+                                if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
+                                    ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
+                                } else {
+                                    ESP_LOGD(UDS_TAG, "Negative Response: Message sent to handle_uds_response_queue");
+                                }
+
                             }
                         //Secondly check if it is a positive response
                         }else if(uds_rspns_isotp->payload_buf[0] == (uds_rqst_isotp.buffer[0] | 0x40 )){
@@ -115,11 +118,12 @@ IsoTpLinkContainer *uds_rspns_isotp;
                             bytes_to_hex_string(uds_rspns_isotp, &uds_rqst_rspns_string);
                             ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_request_string: %s", uds_rqst_rspns_string.uds_request_string);
                             ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_response_string %s", uds_rqst_rspns_string.uds_response_string);
-                                if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
-                                    ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
-                                } else {
-                                    ESP_LOGD(UDS_TAG, "Message sent to handle_uds_response_queue");
-                                }
+                            if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
+                                ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
+                            } else {
+                                ESP_LOGD(UDS_TAG, "Positive Response: Message sent to handle_uds_response_queue");
+                            }
+                               
                         }
                 }        
 
@@ -134,20 +138,22 @@ IsoTpLinkContainer *uds_rspns_isotp;
                 //The artificial response always has:
                 // the ID (8 characters), the "7F" (2 characters), the SID of the response (2 characters) and the NRC FF (2 characters)
                 //The length is ALWAYS 14 characters
+                ESP_LOGE(UDS_TAG, "No response from ECU");
                 uds_rqst_rspns_string.uds_response_length = 14;
                 uds_rqst_rspns_string.uds_response_string = malloc(14+1);
                 create_artificial_response (&uds_rqst_rspns_string);  
                 ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_request_string: %s", uds_rqst_rspns_string.uds_request_string);
                 ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_response_string %s", uds_rqst_rspns_string.uds_response_string);
-                
+
+                        //In the end of Queue Recieve handle_uds_request_queue If statement, send result to Queue handle_uds_response_queue
+                if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
+                    ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
+                } else {
+                    ESP_LOGD(UDS_TAG, "No Response: Message sent to handle_uds_response_queue");
+                }
+
             }        
-        //In the end of Queue Recieve handle_uds_request_queue If statement, send result to Queue handle_uds_response_queue
-        if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
-                ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
-            } else {
-                ESP_LOGD(UDS_TAG, "Message sent to handle_uds_response_queue");
-            }
-        
+
         }                  
     }
 }

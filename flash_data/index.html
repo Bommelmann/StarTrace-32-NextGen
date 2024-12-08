@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu with JSON Fetch</title>
+    <title>StarTrace NextGen</title>
+    <script src="commonfunctions.js" defer></script>
+    <script src="startupfunctions.js" defer></script>
     <style>
         /* Main Layout */
         body {
@@ -67,14 +69,42 @@
             align-items: center;
             z-index: 1000;
         }
-        .modal-content {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            width: 80%;
-            max-width: 500px;
-            text-align: center;
+        .errormodal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 1);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
+        
+        #ecu-scan-modal {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        }
+        .modal-content {
+        background-color: #fff;
+        padding: 40px; /* Mehr Padding für den Ladekreis */
+        border-radius: 5px;
+        width: 300px; /* Fixierte Breite, passend zum Ladekreis */
+        max-width: 80%; /* Für Responsive Design */
+        text-align: center;
+        }
+        .errormodal-content {
+        background-color: #ee8b0988;
+        padding: 40px; /* Mehr Padding für den Ladekreis */
+        border-radius: 5px;
+        width: 300px; /* Fixierte Breite, passend zum Ladekreis */
+        max-width: 80%; /* Für Responsive Design */
+        text-align: center;
+        }
+
         .modal-content h2 {
             margin-top: 0;
         }
@@ -84,6 +114,35 @@
             font-size: 16px;
             cursor: pointer;
         }
+        .loading-icon {
+        border: 16px solid #f3f3f3; /* Light grey */
+        border-top: 16px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+        margin: 0 auto;
+        }
+        /* Das Kreuz oben rechts */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .close-btn:hover {
+            color: #e60000; /* Rote Farbe, wenn man mit der Maus drüber geht */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
     </style>
 </head>
 <body>
@@ -101,7 +160,7 @@
     <!-- Content Area -->
     <div class="content">
         <div id="home" class="content-section">
-            <h1>Welcome to the Home Page</h1>
+            <h1>Welcome to Startrace!</h1>
         </div>
         <div id="identification" class="content-section hidden">
             <h1>Identification</h1>
@@ -124,138 +183,64 @@
             <h2>Disclaimer! Warning!</h2>
             <p>YOUR USE OF THIS SOFTWARE MUST BE DONE WITH CAUTION AND A FULL UNDERSTANDING OF THE RISKS!</p>
             <p>THIS WARNING IS PRESENTED TO INFORM YOU THAT THE OPERATION OF THIS SOFTWARE MAY BE DANGEROUS. YOUR ACTIONS CAN INFLUENCE THE BEHAVIOR OF A CAN-BASED DISTRIBUTED EMBEDDED SYSTEM, AND DEPENDING ON THE APPLICATION, THE CONSEQUENCES OF YOUR IMPROPER ACTIONS COULD CAUSE SERIOUS OPERATIONAL MALFUNCTION, DAMAGE TO EQUIPMENT, AND PHYSICAL INJURY TO YOURSELF AND OTHERS.</p>
-            <button onclick="acceptDisclaimer()">I accept</button>
+            <button id="disclaimer-continue">Accept and Continue</button>
         </div>
     </div>
 
-<!-- ECU Selection Modal -->
-<div id="ecu-modal" class="modal">
-    <div class="modal-content">
-        <h2>Choose your ECU Configuration</h2>
-        <div>
-            <!-- Erste Konfiguration -->
-            <label>
-                <input type="radio" id="standard-config" name="ecu-config" value="Standard" onchange="onConfigChange('Standard')">
-                Standard Configuration MB Powertrain (OM4xx/OM9xx)
-            </label>
-            <p style="margin-left: 20px; font-size: 0.9em; color: gray;">CPC, MCM, ACM</p>
-
-            <!-- Zweite Konfiguration -->
-            <label>
-                <input type="radio" id="extended-config" name="ecu-config" value="Extended" onchange="onConfigChange('Extended')">
-                Extended Configuration MB Powertrain (OM4xx/OM9xx)
-            </label>
-            <p style="margin-left: 20px; font-size: 0.9em; color: gray;">CPC, MCM, ACM, TCM</p>
+    <!-- ECU SCAN Modal -->
+    <div id="ecu-scan-modal" class="modal" >
+        <div class="modal-content">
+            <h2>Startrace is scanning for ECUs</h2>
+            <div class="loading-icon"></div>
         </div>
-
-        <!-- Weiter-Button -->
-        <button onclick="proceedToIdentification()">Continue</button>
     </div>
-</div>
+
+    <!-- Modal für Fehlernachricht -->
+    <div id="error-modal" class="errormodal">
+        <div class="errormodal-content">
+            <span id="close-btn" class="close-btn">&times;</span> <!-- Kreuz hinzufügen -->
+            <h2>Ooops! Something went wrong.</h2>
+            <p>We apologize sincerely. Please do a KL30 reset and restart Startrace. Sorry again!</p>
+            <h2>This is the error:</h2>
+            <p id="error-text"></p> 
+        </div>
+    </div>
+
 
 
     <script>
+ 
+        const closeBtn = document.getElementById('close-btn');
+        closeBtn.addEventListener('click', function() {
+        errorModal.style.display = 'none'; // Modal schließen
+        });
+
+        let globalConfigJSON={};
+
         // Display disclaimer modal on first load
-        window.onload = function() {
+        window.onload = async function() {
             console.log("Script loaded");
-            document.getElementById('disclaimer-modal').style.display = 'flex';
-            getInitialAssets();
-            DiagnosticRequest();
+            await getInitialAssets();
+            //Get Variable for Disclaimer Modal
+            const disclaimer_modal=document.getElementById('disclaimer-modal');
+            //Get Variable for Disclaimer Button
+            const disclaimer_continue = document.getElementById('disclaimer-continue');
+            //Get Variable for Scanning Modal
+            const scanning_modal=document.getElementById('ecu-scan-modal');
+            disclaimer_modal.style.display = 'flex';
+            disclaimer_continue.addEventListener('click', async function () {
+            // Disclaimer-Modal schließen
+            disclaimer_modal.style.display = 'none';
+            // Scanning-Modal öffnen
+            scanning_modal.style.display = 'flex';
+            await ScanECUs();
+            
+            });
+            
                         
         };
 
-        // Function to handle disclaimer acceptance
-        function acceptDisclaimer() {
-            document.getElementById('disclaimer-modal').style.display = 'none';
-            document.getElementById('ecu-modal').style.display = 'flex';
-        }
-
-        // Function to proceed to the Identification page
-        function proceedToIdentification() {
-            // Get selected ECU values
-            const selectedECUs = Array.from(document.querySelectorAll('input[name="ecu"]:checked'))
-                                      .map(input => input.value);
-            
-            if (selectedECUs.length === 0) {
-                alert('Please select at least one ECU to continue.');
-            } else {
-                // Close ECU selection modal and navigate to "Identification" section
-                document.getElementById('ecu-modal').style.display = 'none';
-                showContent('identification');
-            }
-        }
-
-        // Function to show selected content and hide others
-        function showContent(section) {
-            const sections = document.querySelectorAll('.content-section');
-            sections.forEach(sec => sec.classList.add('hidden'));
-            document.getElementById(section).classList.remove('hidden');
-        }
-
-        // Function to fetch JSON from server
-        function fetchJson() {
-            fetch('/get-date')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('json-output').textContent = JSON.stringify(data);
-                })
-                .catch(error => {
-                    document.getElementById('json-output').textContent = 'Error fetching JSON';
-                    console.error('Error:', error);
-                });
-        }
-
-        function DiagnosticRequest (){
-            requestData = {
-                "request" : "18DA00F122F100",  // Beispiel-Request
-                "response": ""
-                };
-                link ="/uds_request?"
-                fetch(link,{
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestData) // JSON-Daten in einen String konvertieren
-                })
-                .then(response => response.json())  // Antwort als JSON parsen
-                .then(data => {
-                    console.log('Antwort vom Server:', data);  // Serverantwort verarbeiten
-                })
-                .catch(error => {
-                    console.error('Fehler bei der Anfrage:', error);
-                });
-
-
-        }
-
-        function getInitialAssets(){
-
-            const link = "/config.json";
-
-                // GET-Anfrage senden
-                fetch(link, {
-                    method: 'GET', // Methode ist GET
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP-Error! Status: ${response.status}`);
-                    }
-                    return response.json();  // Antwort als JSON parsen
-                })
-                .then(data => {
-                    console.log('Antwort vom Server:', data);  // Serverantwort verarbeiten
-                })
-                .catch(error => {
-                    console.error('Fehler bei der Anfrage:', error);
-                });
-
-
-        }
-
+    
        
     </script>
 

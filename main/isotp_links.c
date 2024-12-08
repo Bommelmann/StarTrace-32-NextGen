@@ -37,9 +37,9 @@ void configure_isotp_links()
     // RX_ID + TX_ID are flipped because this device acts as a "tester" listening for responses from ECUs. the ECU's TX is our RX
     // TODO: make these configurable via j2534 filters
     configure_isotp_link(0, 0x18DA00F1, 0x18DAF100, "CPC");
-    //configure_isotp_link(1, 0x18DA01F1, 0x18DAF101, "MCM");
-    //configure_isotp_link(2, 0x18DA03F1, 0x18DAF103, "TCM");
-    //configure_isotp_link(3, 0x18DA3DF1, 0x18DAF13D, "ACM");
+    configure_isotp_link(1, 0x18DA01F1, 0x18DAF101, "MCM");
+    configure_isotp_link(2, 0x18DA03F1, 0x18DAF103, "TCM");
+    configure_isotp_link(3, 0x18DA3DF1, 0x18DAF13D, "ACM");
     // free lock
     xSemaphoreGive(isotp_mutex);
 }

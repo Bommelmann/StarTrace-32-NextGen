@@ -4,13 +4,11 @@
 #include "esp_log.h"
 #include "driver/twai.h"
 
-
 #include "initWifi.h"
 #include "createWebserver.h"
 #include "InitializeFilesystem.h"
 #include "InitializeSDCard.h"
 #include "twai_tasks.h"
-
 
 
 #include "messages.h"
@@ -25,6 +23,7 @@
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 #include "mutexes.h"
+
 
 #include "HandleUDSRequests.h"
 
@@ -46,8 +45,10 @@ QueueHandle_t handle_uds_request_queue_container;
 
 httpd_handle_t server = NULL;
 
+
 uint8_t Diag_Resp [8];
 
+/*
 static esp_err_t stop_webserver(httpd_handle_t server)
 {
     // Stop the httpd server
@@ -79,7 +80,7 @@ static void connect_handler(void* arg, esp_event_base_t event_base,
 }
 
 
-
+*/
 
 void app_main(void)
 {
@@ -88,6 +89,10 @@ void app_main(void)
     //#################################################
     esp_log_level_set("*", ESP_LOG_DEBUG);  
 
+    //INIT LED #######################################
+    //##################################################
+    configureLEDs();
+    actuateLEDs(RED);
 
     //INIT WIFI #######################################
     //#################################################
@@ -97,8 +102,8 @@ void app_main(void)
     InitWifi();
     /* Register event handlers to stop the server when Wi-Fi or Ethernet is disconnected,
      * and re-start it upon connection.*/
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
+    //ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
+    //ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 
     start_webserver();
 
@@ -167,7 +172,8 @@ void app_main(void)
     xTaskCreatePinnedToCore(handle_uds_request_task, "UDS_handling", 4096, NULL, MAIN_TSK_PRIO, NULL, tskNO_AFFINITY);
     ESP_LOGI(MAIN_TAG, "Tasks started");
 
-    
+    //Everything is ready, actuate LED BLUE
+    actuateLEDs(BLUE);
     //Test ############################################
     //#################################################
     //Delay Task then fill Queue with messages
