@@ -4,7 +4,7 @@ static const char *TAG = "initializeFilesystem.c";
 
 void InitializeFilesystem(void)
 {
-    ESP_LOGI(TAG, "Initializing LittleFS");
+    ESP_LOGI(TAG, "Initializing LittleFS in Flash");
 
     esp_vfs_littlefs_conf_t conf = {
         .base_path = "/data",

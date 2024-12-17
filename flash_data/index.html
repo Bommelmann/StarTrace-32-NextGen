@@ -81,7 +81,7 @@
             align-items: center;
             z-index: 1000;
         }
-        
+
         #ecu-scan-modal {
         display: none;
         justify-content: center;
@@ -149,6 +149,58 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* JSON Tree Styling */
+        .json-tree {
+            margin-top: 20px;
+        }
+        .json-tree-item {
+            margin: 5px 0;
+        }
+        .json-tree-header {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .json-tree-header:hover {
+            background-color: #575757;
+        }
+        .json-tree-content {
+            display: none;
+            padding-left: 20px;
+        }
+        .json-tree-content.active {
+            display: block;
+        }
+        .json-tree-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .json-tree-level-0 {
+            background-color: #333;
+            color: white;
+        }
+        .json-tree-level-1 {
+            background-color: #555;
+            color: white;
+        }
+        .json-tree-level-2 {
+            background-color: #777;
+            color: white;
+        }
+        .json-tree-level-3 {
+            background-color: #999;
+            color: black;
+        }
+        .json-tree-level-4 {
+            background-color: #bbb;
+            color: black;
+        }
+        .json-tree-level-5 {
+            background-color: #ddd;
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -167,6 +219,7 @@
     <div class="content">
         <div id="home" class="content-section">
             <h1>Welcome to Startrace!</h1>
+            <div id="json-tree"></div>
         </div>
         <div id="identification" class="content-section hidden">
             <h1>Identification</h1>
@@ -201,7 +254,6 @@
         </div>
     </div>
 
-
     <!-- Modal für Fehlernachricht -->
     <div id="error-modal" class="errormodal">
         <div class="errormodal-content">
@@ -209,56 +261,105 @@
             <h2>Ooops! Something went wrong.</h2>
             <p>We apologize sincerely. Please do a KL30 reset and restart Startrace. Sorry again!</p>
             <h2>This is the error:</h2>
-            <p id="error-text"></p> 
+            <p id="error-text"></p>
         </div>
     </div>
 
-    
-
     <script>
- 
         const closeBtn = document.getElementById('close-btn');
         closeBtn.addEventListener('click', function() {
-        errorModal.style.display = 'none'; // Modal schließen
+            errorModal.style.display = 'none'; // Modal schließen
         });
 
-        let globalConfigJSON={};
+        let globalConfigJSON = {};
+        let globalCPCDiagDataJSON = {};
 
         // Display disclaimer modal on first load
         window.onload = async function() {
             console.log("Script loaded");
             await getInitialAssets();
-            //Get Variable for Disclaimer Modal
-            const disclaimer_modal=document.getElementById('disclaimer-modal');
-            //Get Variable for Disclaimer Button
+            // Get Variable for Disclaimer Modal
+            const disclaimer_modal = document.getElementById('disclaimer-modal');
+            // Get Variable for Disclaimer Button
             const disclaimer_continue = document.getElementById('disclaimer-continue');
-            //Get Variable for Scanning Modal
-            const scanning_modal=document.getElementById('ecu-scan-modal');
-            //Get Variable for Other variable ECU-Scan Stuff
+            // Get Variable for Scanning Modal
+            const scanning_modal = document.getElementById('ecu-scan-modal');
+            // Get Variable for Other variable ECU-Scan Stuff
             const ecuScanTitle = document.getElementById('ecu-scan-title');
             const ecuScanIcon = document.getElementById('ecu-scan-icon');
             disclaimer_modal.style.display = 'flex';
             disclaimer_continue.addEventListener('click', async function () {
-            // Disclaimer-Modal schließen
-            disclaimer_modal.style.display = 'none';
-            // Scanning-Modal öffnen
-            scanning_modal.style.display = 'flex';
-            await ScanECUs();
-            ecuScanTitle.textContent = 'ECU Scan Complete';
-            ecuScanIcon.classList.remove('loading-icon');
-            ecuScanIcon.classList.add('success-icon');
-            ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
-            //Grüner Haken soll gesehen werden
-            await new Promise(resolve => setTimeout(resolve, 500));
-            scanning_modal.style.display = 'none';
-            
+                // Disclaimer-Modal schließen
+                disclaimer_modal.style.display = 'none';
+                // Scanning-Modal öffnen
+                scanning_modal.style.display = 'flex';
+                await ScanECUs();
+                ecuScanTitle.textContent = 'ECU Scan Complete';
+                ecuScanIcon.classList.remove('loading-icon');
+                ecuScanIcon.classList.add('success-icon');
+                ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
+                // Grüner Haken soll gesehen werden
+                await new Promise(resolve => setTimeout(resolve, 500));
+                scanning_modal.style.display = 'none';
+
+                // Display globalConfigJSON on home page
+                displayJsonTree(globalConfigJSON, document.getElementById('json-tree'));
+
+                //get DiagDescriptions from server
+                await getDiagDescriptions();
             });
-            
-                        
         };
 
-    
-       
+        // Function to display JSON tree
+        function displayJsonTree(json, container) {
+
+
+            
+            // container.innerHTML = ''; // Clear previous content
+            // //Stack mit 3 Eigenschaften
+            //     //key: Startpunkt der JSON Struktur
+            //     //value: json object
+            //     //level: Hirarchielevel
+            // const stack = [{ key: 'root', value: json, level: 0 }];
+
+            // while (stack.length > 0) {
+            //     //Oberste Element des Stacks wird entfernt und in die Variablen key, value und level eingefügt
+            //     const { key, value, level } = stack.pop();
+            //     //Item wird erstellt und der CSS Klasse json-tree-item zugewiesen
+            //     const item = document.createElement('div');
+            //     item.className = 'json-tree-item';
+            //     //Item wird erstellt für Header
+            //     const header = document.createElement('div');
+            //     //2 CSS Klassen werden zugewiesen (auf einaml)
+            //     header.className = 'json-tree-header json-tree-level-' + level;
+            //     //Button wird erstellt mit + Zeichen und, und wird dem key zugewiesen
+            //     header.innerHTML = `<button class="json-tree-button">+</button> ${key.replace(/_/g, ' ')}`;
+            //     item.appendChild(header);
+
+            //     const content = document.createElement('div');
+            //     content.className = 'json-tree-content';
+            //     content.textContent = value;
+                
+            //     item.appendChild(content);
+
+            //     header.addEventListener('click', function() {
+            //         content.classList.toggle('active');
+            //         header.querySelector('.json-tree-button').textContent = content.classList.contains('active') ? '-' : '+';
+            //     });
+            // }
+        }
+
+        // Funktion, die bei Verlassen der Seite ausgeführt wird
+        window.addEventListener('beforeunload', function (event) {
+            // Funktion ausführen, bevor die Seite geschlossen wird
+            console.log('Die Seite wird geschlossen oder neu geladen.');
+
+            // Speichern der config.json im Local Storage
+            localStorage.setItem('globalConfigJSON', JSON.stringify(globalConfigJSON));
+
+            // Optional: Eine Bestätigungsmeldung anzeigen
+            return 'Sind Sie sicher, dass Sie die Seite verlassen möchten?';
+        });
     </script>
 
 </body>

@@ -2,7 +2,8 @@
 
 static const char *TAG = "createwebserver.c";
 /* Initialize file storage */
-const char* base_path = "/data";
+char* base_path_flash="/data";
+char* base_path_sd="/sdcard";
 
 
 esp_err_t uds_request_handler(httpd_req_t *req)
@@ -86,140 +87,132 @@ esp_err_t uds_request_handler(httpd_req_t *req)
 
 esp_err_t start_download_handler(httpd_req_t *req)
 {
-    char filepath[FILE_PATH_MAX];
+    char filepathlfs[FILE_PATH_MAX_LFS];
+    char filepathfatfs[FILE_PATH_MAX_FATFS];
     FILE *fd = NULL;
     struct stat file_stat;
-    const char *filename;
+    char* ECUName;      // Linker Teil
+    char* DiagVersion;
+    char *ECUName_DiagVersion;
 
+    ESP_LOGD(TAG,"req->uri: %s", req->uri);      
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////
     //Case that this is the first request for index.html:
     if (strcmp(req->uri, "/") == 0)
-    {
-        filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
-                                                         "/index.html", sizeof(filepath));
+    {   //Index.html is stored in the basepath /data
+        char *filename_index = get_path_from_uri(filepathlfs, ((struct file_server_data *)req->user_ctx)->base_path,
+                                                         "/index.html", sizeof(filepathlfs));
+
+        //Check if Filename has the correct format and if the file is existing
+        checkonFilename(filename_index, req, &file_stat, filepathlfs);
+        //ReadFiles and send over HTTP
+        readsendFile(filename_index, filepathlfs, req, &file_stat, fd);
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////                                                   
+    //Case that the client requests a DiagDescription, the filename has to be deducted otherwise                                                        
+    }else if(strcmp(req->uri, "/DiagDescription?") == 0){
+                char *filename;
+                filename=malloc(FILE_PATH_MAX_FATFS);
+                if (filename == NULL) {
+                ESP_LOGE(TAG, "Fehler beim Zuweisen von Speicher für filename");
+                return ESP_FAIL;
+            }
+            //DiagDescriptions are stored on the sd card
+            // Länge des Bodys ermitteln
+            size_t buf_len = req->content_len;
+            if (buf_len == 0) {
+                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No JSON body in Request");
+                free (filename);
+                return ESP_FAIL;
+            }
+
+            // Speicher für den Body reservieren (+1 für Nullterminator)
+            char *buf = malloc(buf_len + 1);
+            if (!buf) {
+                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Memory allocation failed");
+                free (filename);
+                return ESP_FAIL;
+            }
+
+            // Body aus der Anfrage lesen
+            int ret = httpd_req_recv(req, buf, buf_len);
+            if (ret <= 0) {
+                free(buf);
+                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Failed to read request body");
+                free (filename);
+                return ESP_FAIL;
+            }
+            buf[ret] = '\0';
+
+            ESP_LOGI(TAG, "JSON-Daten DiagDescriptions: %s", buf);
+            // Nullterminator hinzufügen, um den Body als String zu behandeln
+            
+
+            // JSON parsen
+            cJSON *ECUName_DiagVersion_json = cJSON_Parse(buf);
+            free(buf); // Speicher des Buffers freigeben, da er nicht mehr benötigt wird
+            if (!ECUName_DiagVersion_json) {
+                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON format");
+                free (filename);
+                return ESP_FAIL;
+            }
+
+            cJSON *data_json = cJSON_GetObjectItem(ECUName_DiagVersion_json, "ECUName_DiagVersion");
+            if (!cJSON_IsString(data_json)){
+                cJSON_Delete(data_json);
+                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing or invalid 'ECUName_DiagVersion' field");
+                free (filename);
+                return ESP_FAIL;
+            }
+
+            //Get relevant Data
+            uint32_t length =strlen(data_json->valuestring);
+            ECUName_DiagVersion = malloc(length +1 );
+            strcpy(ECUName_DiagVersion,data_json->valuestring);
+            //ESP_LOGI(TAG,"ECUName_DiagVersion, %s", ECUName_DiagVersion);
+            //ESP_LOGI(TAG,"ECUName_DiagVersion, %s",ECUName_DiagVersion);
+            char* separator = strchr(ECUName_DiagVersion, '_'); // Suche nach dem Unterstrich
+            if (separator != NULL) {
+                // Teile den String an der Position des Unterstrichs
+                *separator = '\0'; // Unterstrich durch Nullzeichen ersetzen
+            }
+            ECUName = ECUName_DiagVersion;
+            DiagVersion = separator + 1;        // Rechter Teil
+            //free(ECUName_DiagVersion);
+            ESP_LOGD(TAG,"ECUName: %s", ECUName);
+            ESP_LOGD(TAG,"DiagVersion: %s", DiagVersion);
+
+            strcpy(filepathfatfs, base_path_sd);
+            strcat(filepathfatfs,"/DiagDescriptions");
+            //Get Correct Filename
+            findFile(ECUName, DiagVersion,filepathfatfs,filename);
+            strcat(filepathfatfs,"/");
+            strcat(filepathfatfs,filename);
+            ESP_LOGI(TAG,"DiagDataFilepath: %s", filepathfatfs);
+
+            //Check if Filename has the correct format and if the file is existing
+            checkonFilename(filename, req, &file_stat, filepathfatfs);
+
+            //ReadFiles and send over HTTP
+            readsendFile(filename, filepathfatfs, req, &file_stat, fd);
+            free (filename);
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////                                                        
     //In any other cases, the filename is contained in the URI                                                     
-    }else{
-        filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
-                                                         req->uri, sizeof(filepath));
+    else{
+        //Anything else is stored in the basepath /data
+
+        char *filename_data = get_path_from_uri(filepathlfs, ((struct file_server_data *)req->user_ctx)->base_path,
+                                                         req->uri, sizeof(filepathlfs));
+
+        //Check if Filename has the correct format and if the file is existing
+        checkonFilename(filename_data, req, &file_stat, filepathlfs);
+        //ReadFiles and send over HTTP
+        readsendFile(filename_data, filepathlfs, req, &file_stat, fd);
     }
-    //ESP_LOGI(TAG,"Filepath: %s", filepath);
-    //ESP_LOGI(TAG, "Base path: %s", ((struct file_server_data *)req->user_ctx)->base_path);
-    //ESP_LOGI(TAG,"req->uri: %s", req->uri);                    
-    //ESP_LOGI(TAG,"Filename: %s", filename);
-        
-    if (!filename) {
-        ESP_LOGE(TAG, "Filename is too long");
-
-        /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Filename too long");
-        return ESP_FAIL;
-    }
-
-    /* If name has trailing '/', respond with directory contents */
-    if (filename[strlen(filename) - 1] == '/') {
-        //return http_resp_dir_html(req, filepath);
-    }
-
-    
-        if (stat(filepath, &file_stat) == -1) {
-    //       /* If file not present on SPIFFS check if URI
-    //        * corresponds to one of the hardcoded paths */
-            ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
-            /* Respond with 404 Not Found */
-            httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File does not exist");
-    //     return ESP_FAIL;
-    }
-    
-
-        //////////////////////////////////////
-        //LittleFS
-
-    fd = fopen(filepath, "r");
-    if (!fd) {
-        ESP_LOGE(TAG, "Failed to read existing file : %s", filepath);
-        /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to read existing file");
-        return ESP_FAIL;
-    }
-
-    ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filename, file_stat.st_size);
-    set_content_type_from_file(req, filename);
-
-    /* Retrieve the pointer to scratch buffer for temporary storage */
-    char *chunk = ((struct file_server_data *)req->user_ctx)->scratch;
-    size_t chunksize;
-    do {
-        /* Read file in chunks into the scratch buffer */
-        chunksize = fread(chunk, 1, SCRATCH_BUFSIZE, fd);
-
-        if (chunksize > 0) {
-            /* Send the buffer contents as HTTP response chunk */
-            if (httpd_resp_send_chunk(req, chunk, chunksize) != ESP_OK) {
-                fclose(fd);
-                ESP_LOGE(TAG, "File sending failed!");
-                /* Abort sending file */
-                httpd_resp_sendstr_chunk(req, NULL);
-                /* Respond with 500 Internal Server Error */
-                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
-            return ESP_FAIL;
-        }
-        }
-
-        /* Keep looping till the whole file is sent */
-    } while (chunksize != 0);
-
-    /* Close file after sending complete */
-    fclose(fd);
-    ESP_LOGI(TAG, "LittfleFS File sending complete");
-    
-    /*
-
-    //////////////////////////////////////
-    //SDCard
-    fd = fopen("/sdcard/hello.txt", "r");
-    if (!fd) {
-        ESP_LOGE(TAG, "Failed to read existing file : %s", filepath);
-        //Respond with 500 Internal Server Error
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to read existing file");
-        return ESP_FAIL;
-    }
-
-    ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filename, file_stat.st_size);
-    set_content_type_from_file(req, filename);
-
-    //Retrieve the pointer to scratch buffer for temporary storage
-    chunk = ((struct file_server_data *)req->user_ctx)->scratch;
-    
-    do {
-        //Read file in chunks into the scratch buffer
-        chunksize = fread(chunk, 1, SCRATCH_BUFSIZE, fd);
-
-        if (chunksize > 0) {
-            //Send the buffer contents as HTTP response chunk
-            if (httpd_resp_send_chunk(req, chunk, chunksize) != ESP_OK) {
-                fclose(fd);
-                ESP_LOGE(TAG, "File sending failed!");
-                //Abort sending file
-                httpd_resp_sendstr_chunk(req, NULL);
-                //Respond with 500 Internal Server Error
-                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
-               return ESP_FAIL;
-           }
-        }
-
-        //Keep looping till the whole file is sent
-    } while (chunksize != 0);
-
-    //Close file after sending complete
-    fclose(fd);
-    ESP_LOGI(TAG, "SD File sending complete");
-
-    //Respond with an empty chunk to signal HTTP response completion
-    httpd_resp_send_chunk(req, NULL, 0);
-
-    */
-    //Mit Übermittlung eines leeren Chunks, signalisiert das Ende derübertragung
-    httpd_resp_send_chunk(req, NULL, 0); // Signalisiert das Ende der Übertragung
-
+    //free (filename);
     return ESP_OK;
 }
 
@@ -274,23 +267,40 @@ esp_err_t ws_handler(httpd_req_t *req)
 /* HTTP-Server initialisieren */
 esp_err_t start_webserver(void)
 {
-   static struct file_server_data *server_data = NULL;
-
-    if (server_data) {
+    static struct file_server_data *server_data_flash = NULL;
+   static struct file_server_data *server_data_sdcard = NULL;
+   
+   //Handle Flash server data
+    if (server_data_flash) {
         ESP_LOGE(TAG, "File server already started");
         return ESP_ERR_INVALID_STATE;
     }
 
     /* Allocate memory for server data */
-    server_data = calloc(1, sizeof(struct file_server_data));
-    if (!server_data) {
+    server_data_flash = calloc(1, sizeof(struct file_server_data));
+    if (!server_data_flash) {
         ESP_LOGE(TAG, "Failed to allocate memory for server data");
         return ESP_ERR_NO_MEM;
     }
-    strlcpy(server_data->base_path, base_path,
-            sizeof(server_data->base_path));
+    strlcpy(server_data_flash->base_path, base_path_flash,
+            sizeof(server_data_flash->base_path));
 
-    
+    //Handle SD server data
+       //Handle Flash server data
+    if (server_data_sdcard) {
+        ESP_LOGE(TAG, "File server already started");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    /* Allocate memory for server data */
+    server_data_sdcard = calloc(1, sizeof(struct file_server_data));
+    if (!server_data_sdcard) {
+        ESP_LOGE(TAG, "Failed to allocate memory for server data");
+        return ESP_ERR_NO_MEM;
+    }
+    strlcpy(server_data_sdcard->base_path, base_path_sd,
+            sizeof(server_data_sdcard->base_path));
+
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
     // Starten des HTTP-Servers
@@ -304,7 +314,7 @@ esp_err_t start_webserver(void)
             .uri       = "/config.json",
             .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data
+            .user_ctx  = server_data_flash
         };
         httpd_register_uri_handler(server, &start_download_uri_config);
 
@@ -312,7 +322,7 @@ esp_err_t start_webserver(void)
             .uri       = "/commonfunctions.js",
             .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data
+            .user_ctx  = server_data_flash
         };
         httpd_register_uri_handler(server, &start_download_uri_commonfunctions);
 
@@ -320,15 +330,23 @@ esp_err_t start_webserver(void)
             .uri       = "/startupfunctions.js",
             .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data
+            .user_ctx  = server_data_flash
         };
         httpd_register_uri_handler(server, &start_download_uri_startupfunctions);
+
+        httpd_uri_t start_download_uri_diagdescription = {
+            .uri       = "/DiagDescription",
+            .method    = HTTP_POST,
+            .handler   = start_download_handler,
+            .user_ctx  = server_data_sdcard
+        };
+        httpd_register_uri_handler(server, &start_download_uri_diagdescription);
 
         httpd_uri_t start_download_uri = {
             .uri       = "/",
             .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data
+            .user_ctx  = server_data_flash
         };
         httpd_register_uri_handler(server, &start_download_uri);
 
@@ -354,7 +372,7 @@ esp_err_t start_webserver(void)
 }
 
 
-const char* get_path_from_uri(char *dest, const char *base_path, const char *uri, size_t destsize)
+char* get_path_from_uri(char *dest, const char *base_path, const char *uri, size_t destsize)
 {
     const size_t base_pathlen = strlen(base_path);
     size_t pathlen = strlen(uri);
@@ -467,21 +485,3 @@ esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     return ESP_OK;
 }
 */
-
-esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filename)
-{
-    if (IS_FILE_EXT(filename, ".pdf")) {
-        return httpd_resp_set_type(req, "application/pdf");
-    } else if (IS_FILE_EXT(filename, ".html")) {
-        return httpd_resp_set_type(req, "text/html");
-    } else if (IS_FILE_EXT(filename, ".jpeg")) {
-        return httpd_resp_set_type(req, "image/jpeg");
-    } else if (IS_FILE_EXT(filename, ".ico")) {
-        return httpd_resp_set_type(req, "image/x-icon");
-    } else if (IS_FILE_EXT(filename, ".json")) {
-        return httpd_resp_set_type(req, "application/json");
-    }
-    /* This is a limited set only */
-    /* For any other type always set as plain text */
-    return httpd_resp_set_type(req, "text/plain");
-}

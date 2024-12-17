@@ -1,30 +1,22 @@
 {
-    "server": {
+    "WIFI": {
       "username": "",
       "password": "",
       "host": "",
       "path": ""
     },
-    "access_points": [],
-    "logging": {
+    "CAN_Bus_Logging": {
       "status": "off",
-      "fileFormat": "asc",
-      "startTrigger": "none"
+      "fileFormat": "asc"
     },
-    "can": {
+    "CAN_Bus": {
       "rx_pin": 4,
       "tx_pin": 5,
       "baudrate": 250000,
       "testerAddress": 241,
       "ID_length_bit": 29
     },
-    "devices": {
-      "cpc": true,
-      "mcm": true,
-      "tcm": false,
-      "acm": true
-    },
-    "UDS_devices": [
+    "ECUs": [
       {
         "SA": 0,
         "shortLabel": "CPC",
@@ -102,7 +94,7 @@
         "AutomaticConnect": true  
       }
     ],
-    "rtc": {
+    "Real_Time_Clock": {
       "ntpServer": "pool.ntp.org",
       "timeRefGMT_ts": 623458800,
       "GMTOffset_sec": 0

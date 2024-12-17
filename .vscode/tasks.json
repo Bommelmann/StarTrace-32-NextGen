@@ -12,6 +12,7 @@
             "PATH": "${env:PATH};${config:idf.customExtraPaths}"
           }
         }
+    
       },
       "options": {
         "env": {
@@ -39,6 +40,14 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label" : "preRun",
+      "type": "shell",
+      "windows":{
+          "command": "clear start openocd -f interface/ftdi/esp32_devkitj_v1.cfg -f target/esp32s3.cfg -c adapter speed 1000"
+      }
+
     },
     {
       "label": "Set ESP-IDF Target",

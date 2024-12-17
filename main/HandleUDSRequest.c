@@ -90,8 +90,8 @@ IsoTpLinkContainer *uds_rspns_isotp;
                 
                 // Check if the response fits to the request
                 //First Check for the correct ID
-                    ESP_LOGI(UDS_TAG, "uds_rspns_isotp->link.send_arbitration_id: %d", (int)uds_rspns_isotp->link.send_arbitration_id);
-                    ESP_LOGI(UDS_TAG, "uds_rspns_isotp->link.send_arbitration_id: %d", (int)uds_rqst_isotp.tx_id);
+                    ESP_LOGD(UDS_TAG, "uds_rspns_isotp->link.send_arbitration_id: %d", (int)uds_rspns_isotp->link.send_arbitration_id);
+                    ESP_LOGD(UDS_TAG, "uds_rspns_isotp->link.send_arbitration_id: %d", (int)uds_rqst_isotp.tx_id);
                 if (uds_rspns_isotp->link.send_arbitration_id == uds_rqst_isotp.tx_id) {
                     //Then check for the correct payload
                     //First check if it is a negative response

@@ -9,17 +9,22 @@ async function getInitialAssets(){
     function timeoutPromise() {
         return new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout beim Abrufen der Daten')), timeout));
     }
+        //Zuerst prüfen, ob sich ein Objekt namens "globalConfigJSON" im Cache befindet
         try{
-            // Warte auf die erste der beiden Promises (fetch oder Timeout)
-            const response = await Promise.race([
-                fetch(link, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }),
-                timeoutPromise() // Timeout abwarten
-            ]);
+            const cachedConfig = localStorage.getItem('globalConfigJSON');
+            if ((cachedConfig !== undefined) && (cachedConfig !== null) && (cachedConfig !== "") && (cachedConfig != "{}")) {
+                globalConfigJSON = JSON.parse(cachedConfig);
+            } else {
+                const response = await Promise.race([
+                    fetch(link, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }),
+                    timeoutPromise() // Timeout abwarten
+                ]);
+            
 
             // Prüfen, ob die Antwort erfolgreich war
             if (!response.ok) {
@@ -31,7 +36,7 @@ async function getInitialAssets(){
 
             // Speichern der erhaltenen Daten in der globalen Variable
             globalConfigJSON = data;
-
+            }   
             }catch(error){
                 //Fehlerbehandlung   
                 console.error('Fehler bei der Anfrage:', error);
@@ -47,14 +52,14 @@ async function getInitialAssets(){
 async function ScanECUs() {
     console.log("ScanECUs");
 
-    // Iteriere durch UDS_devices
-    for (const device of globalConfigJSON.UDS_devices) {
+    // Iteriere durch ECUs
+    for (const device of globalConfigJSON.ECUs) {
 
         if (device.AutomaticConnect==true){
             console.log(`Device: ${device.shortLabel}`);
             
             // TA: Tester Address
-            let TA = globalConfigJSON.can.testerAddress.toString(16).toUpperCase();
+            let TA = globalConfigJSON.CAN_Bus.testerAddress.toString(16).toUpperCase();
             TA = TA.padStart(2, '0'); // Fügt eine führende 0 hinzu, wenn Länge < 2
             
             // SA: Service Address
@@ -110,4 +115,64 @@ async function ScanECUs() {
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+async function getDiagDescriptions(){
+
+    const link="/DiagDescription?";
+
+    //Iteriere durch ECUs
+    for (const device of globalConfigJSON.ECUs) {
+        if(device.ECUDetected==true){
+        //Body mit Anfragewerten organisieren
+            let reqstringECU=device.shortLabel;
+            let reqstringDiagVers=device.DetectedDiagVersion;
+            let ECUName_DiagVersion=reqstringECU+'_'+reqstringDiagVers;
+
+            const requestData={
+                "ECUName_DiagVersion" : ECUName_DiagVersion
+            }
+
+            // Definiere das Timeout (in Millisekunden)
+            const timeout = 3000; // 5 Sekunden
+
+            // Funktion, die ein Timeout zurückgibt
+            function timeoutPromise() {
+                return new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout beim Abrufen der Daten')), timeout));
+            }
+                //Zuerst prüfen, ob sich ein Objekt namens "globalConfigJSON" im Cache befindet
+                try{
+                    const response = await Promise.race([
+                        fetch(link, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(requestData)
+                        }),
+                        timeoutPromise() // Timeout abwarten
+                        ]);
+                    
+
+                    // Prüfen, ob die Antwort erfolgreich war
+                    if (!response.ok) {
+                        throw new Error(`HTTP-Error! Status: ${response.status}`);
+                    }
+
+                    // Warten auf das Parsen der JSON-Antwort
+                    const data = await response.json(); 
+
+                    // Speichern der erhaltenen Daten in der globalen Variable
+                    globalCPCDiagDataJSON = data;
+                       
+                    }catch(error){
+                        //Fehlerbehandlung   
+                        console.error('Fehler bei der Anfrage:', error);
+                        showErrorModal(error.message);
+
+                    }
+            }
+    }
+
+}
+
 

@@ -64,12 +64,6 @@ function proceedToIdentification() {
     }
 }
 
-// Function to show selected content and hide others
-function showContent(section) {
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(sec => sec.classList.add('hidden'));
-    document.getElementById(section).classList.remove('hidden');
-}
 
 // Function to fetch JSON from server
 function fetchJson() {
@@ -109,7 +103,7 @@ async function checkforResp(datajson){
     let resphex=parseInt(respchars,16)
     let nrchex=parseInt(nrcchars,16)
     //Positive Response
-    if (reqhex|0x40==resphex){
+    if ((reqhex|0x40)==resphex){
         return ResponseEnum.POSITIVE_RESPONSE;
     }
     if (resphex==0x7F){
@@ -133,7 +127,7 @@ async function checkforDiagVers(datajson, device){
     let ByteLength=device.DiagVersionService.Datatypes.ByteLength;
     let BitLength=device.DiagVersionService.Datatypes.BitLength;
     let ComServiceLength=device.DiagVersionService.ComService.length;
-    let IDLength=globalConfigJSON.can.ID_length_bit;
+    let IDLength=globalConfigJSON.CAN_Bus.ID_length_bit;
     //Extract Chars of DiagVersion
     if(IDLength==29){
         let DiagVersStartChar=8+ComServiceLength+BytePos/2;

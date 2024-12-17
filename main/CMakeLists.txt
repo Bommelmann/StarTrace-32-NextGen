@@ -1,4 +1,4 @@
-idf_component_register(SRCS "InitializeFilesystem.c"
+idf_component_register(SRCS "HandleFileReading.c" "InitializeFilesystem.c"
                              "initWifi.c"
                              "main.c"
                              "createWebserver.c"
@@ -15,7 +15,8 @@ idf_component_register(SRCS "InitializeFilesystem.c"
                             "endian_helpers.c"
                             "isotp_callbacks.c" 
                             "HandleUDSRequest.c"
-                            "functions.c"                           
+                            "functions.c"
+                            "HandleFileReading.c"                           
                                                                                     
                     INCLUDE_DIRS "." 
                     REQUIRES esp_timer driver fatfs esp_wifi nvs_flash spiffs esp_http_server json
