@@ -10,6 +10,10 @@
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
+#include "messages.h"
+#include "queues.h"
+
+extern led_actuation_t led_actuation_order;
 
 esp_netif_t *wifi_init_softap(void);
 esp_netif_t *wifi_init_sta(void);

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        .tabs {
+            overflow: hidden;
+            background-color: #f1f1f1;
+        }
+
+        .tablink {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+        }
+
+        .tablink:hover {
+            background-color: #ddd;
+        }
+
+        .tablink.active {
+            background-color: #ccc;
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border-top: none;
+        }
+
+        .tabcontent.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="tabs">
+        <button class="tablink" onclick="openTab(event, 'detected-ecus')">Detected ECUs</button>
+        <button class="tablink" onclick="openTab(event, 'can-configuration')">CAN Configuration</button>
+        <button class="tablink" onclick="openTab(event, 'wifi-configuration')">WiFi Configuration</button>
+    </div>
+
+    <div id="detected-ecus" class="tabcontent">
+        <h1>Detected ECUs</h1>
+        <div id="json-tree"></div>
+    </div>
+
+    <div id="can-configuration" class="tabcontent hidden">
+        <h1>CAN Configuration</h1>
+        <p>CAN configuration details go here.</p>
+    </div>
+
+    <div id="wifi-configuration" class="tabcontent hidden">
+        <h1>WiFi Configuration</h1>
+        <p>WiFi configuration details go here.</p>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Display JSON tree on the Detected ECUs tab
+        displayJsonTree(globalConfigJSON, document.getElementById('json-tree'));
+    </script>
+</body>
+</html>

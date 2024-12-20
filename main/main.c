@@ -26,7 +26,7 @@
 
 
 #include "HandleUDSRequests.h"
-
+#include "HandleLED.h"
 
 #define MAIN_TAG      "app_main"
 
@@ -42,9 +42,11 @@ QueueHandle_t isotp_send_message_queue;
 QueueHandle_t handle_uds_request_queue;
 QueueHandle_t handle_uds_response_queue;
 QueueHandle_t handle_uds_request_queue_container;
+QueueHandle_t handle_led_actuation_queue;
 
 httpd_handle_t server = NULL;
 
+led_actuation_t led_actuation_order;
 
 uint8_t Diag_Resp [8];
 
@@ -91,9 +93,14 @@ void app_main(void)
 
     //INIT LED #######################################
     //##################################################
-    configureLEDs();
-    actuateLEDs(RED);
-
+    //led_actuation_queue is for the transmission of
+        //items of the data type led_actuation_t
+        //between any task and the task led_actuation_task
+    handle_led_actuation_queue = xQueueCreate(10, sizeof(led_actuation_t));  
+    //"handleLED_task" takes order from any task which fills the queue "handle_led_actuation_queue"
+    //It automatically actuates the LED with the specified color for the specified time
+    xTaskCreatePinnedToCore(handleLED_task, "LED_handling", 4096, NULL, LED_TSK_PRIO, NULL, tskNO_AFFINITY);
+ 
     //INIT WIFI #######################################
     //#################################################
     //Initialize NVS
@@ -129,7 +136,11 @@ void app_main(void)
         //items of the data type IsoTpLinkContainer
         // between the tasks "isotp_processing_task" and "handle_uds_request_task"
     handle_uds_request_queue_container = xQueueCreate(10, sizeof(IsoTpLinkContainer*));
+ 
+
     //websocket_send_queue = xQueueCreate(128, sizeof(send_message_can_t));
+
+
     
 
     //Create Semaphores ###################################
@@ -143,6 +154,11 @@ void app_main(void)
     //TODO: Used to signal the clear to send from received flow control message, from task "twai_receive_task" to "isotp_send_queue_task"
     cts_sem = xSemaphoreCreateBinary();
 
+    //Actuate LED ###################################
+    //#################################################
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=50;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     //Init TWAI ###################################
     //#################################################
     ESP_ERROR_CHECK(twai_driver_install(&g_config, &t_config, &f_config));
@@ -153,7 +169,11 @@ void app_main(void)
     configure_isotp_links();
     ESP_LOGI(MAIN_TAG, "ISO-TP links configured");
     xSemaphoreGive(isotp_send_queue_sem);
-
+    //Actuate LED ###################################
+    //#################################################
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=50;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
 
     //Create Tasks ###################################
     //#################################################
@@ -170,21 +190,34 @@ void app_main(void)
     //"handle_uds_request_tasks" takes orders from any task which fills the queue "handle_uds_request_queue"
     //It automatically sends the diagnostic request over CAN, waits for the response and sends this back
     xTaskCreatePinnedToCore(handle_uds_request_task, "UDS_handling", 4096, NULL, MAIN_TSK_PRIO, NULL, tskNO_AFFINITY);
-    ESP_LOGI(MAIN_TAG, "Tasks started");
 
-    //Everything is ready, actuate LED BLUE
-    actuateLEDs(BLUE);
+    ESP_LOGI(MAIN_TAG, "Tasks started");
+    //Actuate LED ###################################
+    //#################################################
+    led_actuation_order.LED_color=BLUE;
+    led_actuation_order.breaktime=0;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
+
     //Test ############################################
     //#################################################
     //Delay Task then fill Queue with messages
     while (1){
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+            /*
+            if (!heap_caps_check_integrity_all(true)) {
+                ESP_LOGE(MAIN_TAG, "Heap corruption detected!");
+            }
+            ESP_LOGI(MAIN_TAG, "Free heap size: %d", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+            ESP_LOGI(MAIN_TAG, "Largest free block: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
+            */
 
-            //Test
+            /*//Test
             uds_message_string_t uds_message_string_queue_send;
             uds_message_string_queue_send.uds_request_length = 14;
             uds_message_string_queue_send.uds_request_string = malloc(15);
             strcpy(uds_message_string_queue_send.uds_request_string, "18DA00F122F100");
+            free(uds_message_string_queue_send.uds_request_string);
+            */
             //Test: Send in uds queue
            
            //xQueueSend(handle_uds_request_queue, &uds_message_string_queue_send, portMAX_DELAY);

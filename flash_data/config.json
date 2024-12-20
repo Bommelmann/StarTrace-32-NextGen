@@ -34,7 +34,75 @@
         },
         "DetectedDiagVersion":"",
         "ECUDetected": false,
-        "AutomaticConnect": true        
+        "AutomaticConnect": true,
+        "DiagnosticDescriptionNames":[
+          {
+            "Name": "CPC04T_0x060A.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x060B.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x060D.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x060E.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x070A.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x070B.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x0608.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x0611.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x0612.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x0613.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x0707.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x0708.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC04T_0x0709.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC301T_0x011B.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC301T_0x0117.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "CPC301T_0x0127.json.gz",
+            "Status": "NotLoaded"
+          }
+          
+        ],
+          "DiagnosticDescription":""
       },
       {
         "SA": 1,
@@ -53,7 +121,51 @@
         },
         "DetectedDiagVersion":"",
         "ECUDetected": false,
-        "AutomaticConnect": true  
+        "AutomaticConnect": true,
+        "DiagnosticDescriptionNames":[
+          {
+            "Name": "MCM2CT_0x2217.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0BB5.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0BE2.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0BEE.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0BF8.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0C13.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0CC1.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0CE2.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0CEE.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "MCM21T_0x0CF2.json.gz",
+            "Status": "NotLoaded"
+          }
+                    
+      ],
+      "DiagnosticDescription":""  
       },
       {
         "SA": 3,
@@ -72,7 +184,15 @@
       },
         "DetectedDiagVersion":"",
         "ECUDetected": false,
-        "AutomaticConnect": true
+        "AutomaticConnect": true,
+        "DiagnosticDescriptionNames":[
+          {
+            "Name": "TCM01ST_0x0705.json.gz",
+            "Status": "NotLoaded"
+          }
+          
+        ],
+          "DiagnosticDescription":""
       },
       {
         "SA": 61,
@@ -91,7 +211,56 @@
         },
         "DetectedDiagVersion":"",
         "ECUDetected": false,
-        "AutomaticConnect": true  
+        "AutomaticConnect": true,
+        "DiagnosticDescriptionNames":[
+          {
+            "Name": "ACM21T_0x0E45.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM21T_0x0F2E.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM21T_0x0F17.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM21T_0x0F40.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM21T_0x0F52.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM301T_0x1E4F.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM301T_0x1E58.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM301T_0x1F4F.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM301T_0x1F5C.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM301T_0x1F40.json.gz",
+            "Status": "NotLoaded"
+          },
+          {
+            "Name": "ACM301T_0x1F44.json.gz",
+            "Status": "NotLoaded"
+          }
+          
+      ],
+          "DiagnosticDescription":""
+
       }
     ],
     "Real_Time_Clock": {
@@ -99,4 +268,5 @@
       "timeRefGMT_ts": 623458800,
       "GMTOffset_sec": 0
     }
+    
   }

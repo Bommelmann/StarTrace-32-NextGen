@@ -30,4 +30,16 @@ typedef struct uds_message_string
 } uds_message_string_t;
 
 
+
+typedef struct led_actuation
+{
+    enum {
+        RED,
+        BLUE,
+        GREEN,
+        DEFAULT,
+        }LED_color;
+    uint16_t breaktime;
+}led_actuation_t;
+
 #endif

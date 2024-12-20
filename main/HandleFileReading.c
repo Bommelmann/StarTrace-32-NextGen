@@ -11,7 +11,7 @@ esp_err_t checkonFilename(const char* filename, httpd_req_t *req, struct stat *f
         // ESP_LOGI(TAG,"Filename: %s", filename);
     ESP_LOGD(TAG,"Filepath at beginning of CheckonFilename: %s", filepath);
     //If LittleFS is used:
-    if (strcmp(((struct file_server_data *)req->user_ctx)->base_path, "/data") == 0) {
+    if (strcmp(((struct file_server_data *)req->user_ctx)->base_path_flash, "/data") == 0) {
         if (strlen(filename) >= ESP_VFS_PATH_MAX) {
 
         if (!filename) {
@@ -22,7 +22,7 @@ esp_err_t checkonFilename(const char* filename, httpd_req_t *req, struct stat *f
         return ESP_FAIL;
         }
         }
-    }else if (strcmp(((struct file_server_data *)req->user_ctx)->base_path, "/sdcard") == 0) {
+    }else if (strcmp(((struct file_server_data *)req->user_ctx)->base_path_sd, "/sdcard") == 0) {
         if (strlen(filename) >= FILE_PATH_MAX_FATFS) {
 
         if (!filename) {
@@ -54,9 +54,6 @@ esp_err_t checkonFilename(const char* filename, httpd_req_t *req, struct stat *f
 esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, struct stat *file_stat,FILE *fd){
 
     ESP_LOGD(TAG,"Filepath at beginning of readsendFile: %s", filepath);
-    // ESP_LOGI(TAG, "Base path: %s", ((struct file_server_data *)req->user_ctx)->base_path);
-    // ESP_LOGI(TAG,"req->uri: %s", req->uri);                    
-    // ESP_LOGI(TAG,"Filename: %s", filename);
     fd = fopen(filepath, "r");
     if (!fd) {
         ESP_LOGE(TAG, "Failed to read existing file : %s", filepath);
@@ -67,11 +64,15 @@ esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, s
 
     ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filename, file_stat->st_size);
     set_content_type_from_file(req, filename);
-
     /* Retrieve the pointer to scratch buffer for temporary storage */
     char *chunk = ((struct file_server_data *)req->user_ctx)->scratch;
     size_t chunksize;
     do {
+        //Actuate LED ###################################
+        //#################################################
+        led_actuation_order.LED_color=DEFAULT;
+        led_actuation_order.breaktime=100;
+        xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
         /* Read file in chunks into the scratch buffer */
         chunksize = fread(chunk, 1, SCRATCH_BUFSIZE, fd);
 
@@ -160,7 +161,7 @@ bool findFile(const char *ECUName, const char *DiagVersion, char *filepath, char
     dir=opendir(filepath);
     //res = f_opendir(&dir, filepath);
     if (dir == NULL) {
-        ESP_LOGE(TAG, "Fehler beim Öffnen (opendir) des Verzeichnisses: %s", filepath);
+        ESP_LOGE(TAG, "Fehler beim Öffnen des Verzeichnis: %s", filepath);
         return false;
     }
 
@@ -168,8 +169,8 @@ bool findFile(const char *ECUName, const char *DiagVersion, char *filepath, char
     while (1) {
         dp=readdir(dir);
         if (dp==NULL){
-            ESP_LOGE(TAG, "Fehler beim Lesen (readdir) des Verzeichnisses: %s", filepath);
-            return false;
+            ESP_LOGE(TAG, "Am Ende des Verzeichnisses: %s", filepath);
+            break;
         }
 
         // Überprüfe auf exakte Übereinstimmung
@@ -190,9 +191,9 @@ bool findFile(const char *ECUName, const char *DiagVersion, char *filepath, char
             if (hex_value >= 0 && hex_value < target_hex_value && (closest_hex_value == -1 || hex_value > closest_hex_value)) {
                 closest_hex_value = hex_value;
                 strncpy(temp_filename, dp->d_name, FILE_PATH_MAX);
-                ESP_LOGI(TAG,"Found alternative match!");
-                ESP_LOGI(TAG,"Filepath: %s", filepath);
-                ESP_LOGI(TAG,"Temp_Filename: %s", temp_filename);
+                ESP_LOGD(TAG,"Found alternative match!");
+                ESP_LOGD(TAG,"Filepath: %s", filepath);
+                ESP_LOGD(TAG,"Temp_Filename: %s", temp_filename);
 
             }
         }

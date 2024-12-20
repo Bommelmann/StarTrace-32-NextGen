@@ -13,7 +13,10 @@
 #include "esp_spiffs.h"
 #include "esp_http_server.h"
 #include "messages.h"
+#include "queues.h"
 #include "HandleFileReading.h"
+
+extern led_actuation_t led_actuation_order;
 
 
 esp_err_t hello_get_handler(httpd_req_t *req);
@@ -26,7 +29,7 @@ esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filename);
 
 esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath);
 
-
+void remove_question_mark(char *str);
 
 extern uint8_t Diag_Resp [8];
 

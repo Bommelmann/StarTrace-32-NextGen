@@ -8,5 +8,9 @@
 #include "soc/soc_caps.h"
 #include "driver/sdspi_host.h"
 #include "driver/spi_common.h"
+#include "queues.h"
+#include "messages.h"
 
 esp_err_t initializeSDCard();
+
+extern led_actuation_t led_actuation_order;

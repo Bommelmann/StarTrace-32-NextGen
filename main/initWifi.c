@@ -47,6 +47,9 @@ static EventGroupHandle_t s_wifi_event_group;
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=100;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
         ESP_LOGD(TAG_AP, "Station "MACSTR" joined, AID=%d",
@@ -143,6 +146,9 @@ esp_netif_t *wifi_init_sta(void)
 
 
 void InitWifi(void){
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=50;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
@@ -208,6 +214,9 @@ void InitWifi(void){
 
     /* xEventGroupWaitBits() returns the bits before the call returned,
      * hence we can test which event actually happened. */
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=100;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG_STA, "connected to ap SSID:%s password:%s",
                  EXAMPLE_ESP_WIFI_STA_SSID, EXAMPLE_ESP_WIFI_STA_PASSWD);

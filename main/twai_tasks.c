@@ -4,6 +4,11 @@
 
 void twai_receive_task(void *arg)
 {
+    //Actuate LED ###################################
+    //#################################################    
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=50;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     while (1)
     {
         twai_message_t twai_rx_msg;
@@ -39,6 +44,11 @@ void twai_receive_task(void *arg)
 
 void twai_transmit_task(void *arg)
 {
+    //Actuate LED ###################################
+    //#################################################
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=50;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     while (1)
     {
         twai_message_t tx_msg;

@@ -91,17 +91,17 @@ esp_err_t start_download_handler(httpd_req_t *req)
     char filepathfatfs[FILE_PATH_MAX_FATFS];
     FILE *fd = NULL;
     struct stat file_stat;
-    char* ECUName;      // Linker Teil
-    char* DiagVersion;
-    char *ECUName_DiagVersion;
+    //char* ECUName;      // Linker Teil
+    //char* DiagVersion;
+    //char *ECUName_DiagVersion;
 
-    ESP_LOGD(TAG,"req->uri: %s", req->uri);      
+    ESP_LOGI(TAG,"req->uri: %s", req->uri);      
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //Case that this is the first request for index.html:
     if (strcmp(req->uri, "/") == 0)
     {   //Index.html is stored in the basepath /data
-        char *filename_index = get_path_from_uri(filepathlfs, ((struct file_server_data *)req->user_ctx)->base_path,
+        char *filename_index = get_path_from_uri(filepathlfs, ((struct file_server_data *)req->user_ctx)->base_path_flash,
                                                          "/index.html", sizeof(filepathlfs));
 
         //Check if Filename has the correct format and if the file is existing
@@ -111,13 +111,23 @@ esp_err_t start_download_handler(httpd_req_t *req)
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////                                                   
     //Case that the client requests a DiagDescription, the filename has to be deducted otherwise                                                        
-    }else if(strcmp(req->uri, "/DiagDescription?") == 0){
+    }else if(strstr(req->uri, "sdcard?/") != NULL){
+
+
                 char *filename;
                 filename=malloc(FILE_PATH_MAX_FATFS);
                 if (filename == NULL) {
                 ESP_LOGE(TAG, "Fehler beim Zuweisen von Speicher für filename");
                 return ESP_FAIL;
-            }
+                }
+
+                strcpy(filepathfatfs,req->uri);
+                remove_question_mark(filepathfatfs);
+                strcpy (filename,filepathfatfs);
+                ESP_LOGI(TAG,"DiagDataFilepath: %s", filepathfatfs);
+                ESP_LOGI(TAG,"Filename: %s", filename);
+
+            /*
             //DiagDescriptions are stored on the sd card
             // Länge des Bodys ermitteln
             size_t buf_len = req->content_len;
@@ -180,31 +190,42 @@ esp_err_t start_download_handler(httpd_req_t *req)
             ECUName = ECUName_DiagVersion;
             DiagVersion = separator + 1;        // Rechter Teil
             //free(ECUName_DiagVersion);
-            ESP_LOGD(TAG,"ECUName: %s", ECUName);
+            ESP_LOGI(TAG,"ECUName: %s", ECUName);
             ESP_LOGD(TAG,"DiagVersion: %s", DiagVersion);
 
             strcpy(filepathfatfs, base_path_sd);
             strcat(filepathfatfs,"/DiagDescriptions");
             //Get Correct Filename
-            findFile(ECUName, DiagVersion,filepathfatfs,filename);
+            */
+
+            //TestSD
+            /*
+            //findFile(ECUName, DiagVersion,filepathfatfs,filename);
             strcat(filepathfatfs,"/");
+            if(strcmp(ECUName, "CPC") == 0){
+                strcpy(filename, "CPC04T_0x0612.json.gz");
+            }else if(strcmp(ECUName, "MCM") == 0){
+                strcpy (filename,"MCM21T_0x0CF2.json.gz");
+            }else if(strcmp(ECUName, "ACM") == 0){
+                strcpy (filename, "ACM301T_0x1E58.json.gz");
+            }
             strcat(filepathfatfs,filename);
             ESP_LOGI(TAG,"DiagDataFilepath: %s", filepathfatfs);
+            */
 
             //Check if Filename has the correct format and if the file is existing
             checkonFilename(filename, req, &file_stat, filepathfatfs);
 
             //ReadFiles and send over HTTP
             readsendFile(filename, filepathfatfs, req, &file_stat, fd);
-            free (filename);
-    }
+            free (filename);}
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////                                                        
     //In any other cases, the filename is contained in the URI                                                     
     else{
         //Anything else is stored in the basepath /data
 
-        char *filename_data = get_path_from_uri(filepathlfs, ((struct file_server_data *)req->user_ctx)->base_path,
+        char *filename_data = get_path_from_uri(filepathlfs, ((struct file_server_data *)req->user_ctx)->base_path_flash,
                                                          req->uri, sizeof(filepathlfs));
 
         //Check if Filename has the correct format and if the file is existing
@@ -267,24 +288,29 @@ esp_err_t ws_handler(httpd_req_t *req)
 /* HTTP-Server initialisieren */
 esp_err_t start_webserver(void)
 {
-    static struct file_server_data *server_data_flash = NULL;
-   static struct file_server_data *server_data_sdcard = NULL;
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=50;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
+    static struct file_server_data *server_data=NULL;
    
    //Handle Flash server data
-    if (server_data_flash) {
+    if (server_data) {
         ESP_LOGE(TAG, "File server already started");
         return ESP_ERR_INVALID_STATE;
     }
 
     /* Allocate memory for server data */
-    server_data_flash = calloc(1, sizeof(struct file_server_data));
-    if (!server_data_flash) {
+    server_data = calloc(1, sizeof(struct file_server_data));
+    if (!server_data) {
         ESP_LOGE(TAG, "Failed to allocate memory for server data");
         return ESP_ERR_NO_MEM;
     }
-    strlcpy(server_data_flash->base_path, base_path_flash,
-            sizeof(server_data_flash->base_path));
+    strlcpy(server_data->base_path_flash, base_path_flash,
+            sizeof(server_data->base_path_flash));
+    strlcpy(server_data->base_path_sd, base_path_sd,
+        sizeof(server_data->base_path_sd));
 
+    /*
     //Handle SD server data
        //Handle Flash server data
     if (server_data_sdcard) {
@@ -292,7 +318,7 @@ esp_err_t start_webserver(void)
         return ESP_ERR_INVALID_STATE;
     }
 
-    /* Allocate memory for server data */
+    // Allocate memory for server data 
     server_data_sdcard = calloc(1, sizeof(struct file_server_data));
     if (!server_data_sdcard) {
         ESP_LOGE(TAG, "Failed to allocate memory for server data");
@@ -300,6 +326,7 @@ esp_err_t start_webserver(void)
     }
     strlcpy(server_data_sdcard->base_path, base_path_sd,
             sizeof(server_data_sdcard->base_path));
+    */
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
@@ -314,7 +341,7 @@ esp_err_t start_webserver(void)
             .uri       = "/config.json",
             .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data_flash
+            .user_ctx  = server_data
         };
         httpd_register_uri_handler(server, &start_download_uri_config);
 
@@ -322,7 +349,7 @@ esp_err_t start_webserver(void)
             .uri       = "/commonfunctions.js",
             .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data_flash
+            .user_ctx  = server_data
         };
         httpd_register_uri_handler(server, &start_download_uri_commonfunctions);
 
@@ -330,15 +357,15 @@ esp_err_t start_webserver(void)
             .uri       = "/startupfunctions.js",
             .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data_flash
+            .user_ctx  = server_data
         };
         httpd_register_uri_handler(server, &start_download_uri_startupfunctions);
 
         httpd_uri_t start_download_uri_diagdescription = {
-            .uri       = "/DiagDescription",
-            .method    = HTTP_POST,
+            .uri       = "/sdcard",
+            .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data_sdcard
+            .user_ctx  = server_data
         };
         httpd_register_uri_handler(server, &start_download_uri_diagdescription);
 
@@ -346,7 +373,7 @@ esp_err_t start_webserver(void)
             .uri       = "/",
             .method    = HTTP_GET,
             .handler   = start_download_handler,
-            .user_ctx  = server_data_flash
+            .user_ctx  = server_data
         };
         httpd_register_uri_handler(server, &start_download_uri);
 
@@ -485,3 +512,15 @@ esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     return ESP_OK;
 }
 */
+
+void remove_question_mark(char *str) {
+    char *src = str, *dst = str;
+    while (*src) {
+        if (*src != '?') {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0'; // Nullterminator hinzufügen
+
+}

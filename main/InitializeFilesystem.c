@@ -3,7 +3,9 @@
 static const char *TAG = "initializeFilesystem.c";
 
 void InitializeFilesystem(void)
-{
+{   led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=50;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     ESP_LOGI(TAG, "Initializing LittleFS in Flash");
 
     esp_vfs_littlefs_conf_t conf = {

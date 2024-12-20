@@ -4,6 +4,12 @@
 
 void handle_uds_request_task(){
 
+//Actuate LED ###################################
+//#################################################
+led_actuation_order.LED_color=DEFAULT;
+led_actuation_order.breaktime=50;
+xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
+
 //Concept description #############################
 //################################################# 
 //Task is blocked until uds_message_string_t is received via handle_uds_request_queue
@@ -28,6 +34,11 @@ IsoTpLinkContainer *uds_rspns_isotp;
 
         // Receive from handle_uds_request_queue and block task as long nothing is received
         if (xQueueReceive(handle_uds_request_queue, &uds_rqst_rspns_string, portMAX_DELAY) == pdPASS) {
+            //Actuate LED ###################################
+            //#################################################
+            led_actuation_order.LED_color=DEFAULT;
+            led_actuation_order.breaktime=100;
+            xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
             if (uds_rqst_rspns_string.uds_request_string != NULL) {
                 ESP_LOGD(UDS_TAG, "UDS String Length: %d", (int)uds_rqst_rspns_string.uds_request_length);
                 ESP_LOGD(UDS_TAG, "UDS String Content: %s", uds_rqst_rspns_string.uds_request_string);
@@ -157,4 +168,3 @@ IsoTpLinkContainer *uds_rspns_isotp;
         }                  
     }
 }
-

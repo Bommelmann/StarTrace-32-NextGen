@@ -7,6 +7,9 @@ static const char *TAG = "initializeSDCard.c";
 
 esp_err_t initializeSDCard()
 {
+    led_actuation_order.LED_color=DEFAULT;
+    led_actuation_order.breaktime=50;
+    xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     ESP_LOGI(TAG, "Initializing SD card");
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {

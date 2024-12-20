@@ -13,5 +13,9 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_littlefs.h"
+#include "queues.h"
+#include "messages.h"
 
 void InitializeFilesystem(void);
+
+extern led_actuation_t led_actuation_order;

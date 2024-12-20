@@ -134,34 +134,3 @@ void bytes_to_hex_string(IsoTpLinkContainer *uds_rspns_isotp, uds_message_string
 
 
 }
-
-void configureLEDs(){
-    gpio_set_direction(5, GPIO_MODE_OUTPUT);
-    gpio_set_direction(6, GPIO_MODE_OUTPUT);
-    gpio_set_direction(7, GPIO_MODE_OUTPUT);
-
-}
-
-void actuateLEDs(LED_color color){
-    
-    //Rot
-    switch (color){
-        case RED:
-            gpio_set_level(5, 1);
-            gpio_set_level(6, 0);
-            gpio_set_level(7, 0);
-            break;
-        case GREEN:
-            gpio_set_level(5, 0);
-            gpio_set_level(6, 1);
-            gpio_set_level(7, 0);
-            break;
-        case BLUE:
-            gpio_set_level(5, 0);
-            gpio_set_level(6, 0);
-            gpio_set_level(7, 1); 
-            break;            
-    }
-
-}
-

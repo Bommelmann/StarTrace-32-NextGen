@@ -16,7 +16,8 @@ idf_component_register(SRCS "HandleFileReading.c" "InitializeFilesystem.c"
                             "isotp_callbacks.c" 
                             "HandleUDSRequest.c"
                             "functions.c"
-                            "HandleFileReading.c"                           
+                            "HandleFileReading.c"
+                            "HandleLED.c"                           
                                                                                     
                     INCLUDE_DIRS "." 
                     REQUIRES esp_timer driver fatfs esp_wifi nvs_flash spiffs esp_http_server json

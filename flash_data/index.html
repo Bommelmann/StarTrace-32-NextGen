@@ -217,9 +217,8 @@
 
     <!-- Content Area -->
     <div class="content">
-        <div id="home" class="content-section">
-            <h1>Welcome to Startrace!</h1>
-            <div id="json-tree"></div>
+        <div id="home" class="content-section hidden">
+            <!-- Content will be loaded from home.html -->
         </div>
         <div id="identification" class="content-section hidden">
             <h1>Identification</h1>
@@ -267,86 +266,105 @@
 
     <script>
         const closeBtn = document.getElementById('close-btn');
+
         closeBtn.addEventListener('click', function() {
             errorModal.style.display = 'none'; // Modal schließen
         });
 
+
+
         let globalConfigJSON = {};
-        let globalCPCDiagDataJSON = {};
 
         // Display disclaimer modal on first load
         window.onload = async function() {
             console.log("Script loaded");
             await getInitialAssets();
-            // Get Variable for Disclaimer Modal
-            const disclaimer_modal = document.getElementById('disclaimer-modal');
-            // Get Variable for Disclaimer Button
-            const disclaimer_continue = document.getElementById('disclaimer-continue');
-            // Get Variable for Scanning Modal
-            const scanning_modal = document.getElementById('ecu-scan-modal');
-            // Get Variable for Other variable ECU-Scan Stuff
-            const ecuScanTitle = document.getElementById('ecu-scan-title');
-            const ecuScanIcon = document.getElementById('ecu-scan-icon');
-            disclaimer_modal.style.display = 'flex';
+            const { closeBtn, errorModal, disclaimer_modal, disclaimer_continue, scanning_modal, ecuScanTitle, ecuScanIcon } = getElements();
+
             disclaimer_continue.addEventListener('click', async function () {
-                // Disclaimer-Modal schließen
-                disclaimer_modal.style.display = 'none';
-                // Scanning-Modal öffnen
-                scanning_modal.style.display = 'flex';
-                await ScanECUs();
-                ecuScanTitle.textContent = 'ECU Scan Complete';
-                ecuScanIcon.classList.remove('loading-icon');
-                ecuScanIcon.classList.add('success-icon');
-                ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
-                // Grüner Haken soll gesehen werden
-                await new Promise(resolve => setTimeout(resolve, 500));
-                scanning_modal.style.display = 'none';
-
-                // Display globalConfigJSON on home page
-                displayJsonTree(globalConfigJSON, document.getElementById('json-tree'));
-
-                //get DiagDescriptions from server
-                await getDiagDescriptions();
+            // Disclaimer-Modal schließen
+            disclaimer_modal.style.display = 'none';
+            // Scanning-Modal öffnen
+            scanning_modal.style.display = 'flex';
             });
+
+            disclaimer_modal.style.display = 'flex';
+            // Warte, bis der "Accept and Continue"-Button geklickt wird
+            await waitForDisclaimer(disclaimer_continue);
+            // Disclaimer-Modal schließen
+            disclaimer_modal.style.display = 'none';
+            // Scanning-Modal öffnen
+            scanning_modal.style.display = 'flex';
+
+            await ScanECUs();
+            ecuScanTitle.textContent = 'ECU Scan Complete!';
+            ecuScanIcon.classList.remove('loading-icon');
+            ecuScanIcon.classList.add('success-icon');
+            ecuScanIcon.innerHTML = ''; // Leer lassen, Haken kommt erst später
+            ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
+            // Grüner Haken soll gesehen werden
+            await new Promise(resolve => setTimeout(resolve, 500));
+            ecuScanTitle.textContent = 'Loading Databases...';
+            ecuScanIcon.classList.remove('success-icon');
+            ecuScanIcon.classList.add('loading-icon');
+            ecuScanIcon.innerHTML = '';         
+            //get DiagDescriptions from server
+            await getDiagDescriptions();
+            //await TestGetDiagDescriptions();
+            ecuScanTitle.textContent = 'Databases Complete!';
+            ecuScanIcon.classList.remove('loading-icon');
+            ecuScanIcon.classList.add('success-icon');
+            ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
+            await new Promise(resolve => setTimeout(resolve, 500));
+            scanning_modal.style.display = 'none';
+            // Load home content and display it
+            await loadHomeContent();
+            showContent('home');
         };
+
+        async function loadHomeContent() {
+            const response = await fetch('home.html');
+            const homeContent = await response.text();
+            document.getElementById('home').innerHTML = homeContent;
+        }
 
         // Function to display JSON tree
         function displayJsonTree(json, container) {
 
 
             
-            // container.innerHTML = ''; // Clear previous content
-            // //Stack mit 3 Eigenschaften
-            //     //key: Startpunkt der JSON Struktur
-            //     //value: json object
-            //     //level: Hirarchielevel
-            // const stack = [{ key: 'root', value: json, level: 0 }];
+            container.innerHTML = ''; // Clear previous content
+            //Stack mit 3 Eigenschaften
+                //key: Startpunkt der JSON Struktur
+                //value: json object
+                //level: Hirarchielevel
+            const stack = [{ key: 'root', value: json, level: 0 }];
 
-            // while (stack.length > 0) {
-            //     //Oberste Element des Stacks wird entfernt und in die Variablen key, value und level eingefügt
-            //     const { key, value, level } = stack.pop();
-            //     //Item wird erstellt und der CSS Klasse json-tree-item zugewiesen
-            //     const item = document.createElement('div');
-            //     item.className = 'json-tree-item';
-            //     //Item wird erstellt für Header
-            //     const header = document.createElement('div');
-            //     //2 CSS Klassen werden zugewiesen (auf einaml)
-            //     header.className = 'json-tree-header json-tree-level-' + level;
-            //     //Button wird erstellt mit + Zeichen und, und wird dem key zugewiesen
-            //     header.innerHTML = `<button class="json-tree-button">+</button> ${key.replace(/_/g, ' ')}`;
-            //     item.appendChild(header);
+            while (stack.length > 0) {
+                //Oberste Element des Stacks wird entfernt und in die Variablen key, value und level eingefügt
+                const { key, value, level } = stack.pop();
+                //Item wird erstellt und der CSS Klasse json-tree-item zugewiesen
+                const item = document.createElement('div');
+                item.className = 'json-tree-item';
+                //Item wird erstellt für Header
+                const header = document.createElement('div');
+                //2 CSS Klassen werden zugewiesen (auf einaml)
+                header.className = 'json-tree-header json-tree-level-' + level;
+                //Button wird erstellt mit + Zeichen und, und wird dem key zugewiesen
+                header.innerHTML = `<button class="json-tree-button">+</button> ${key.replace(/_/g, ' ')}`;
+                item.appendChild(header);
 
-            //     const content = document.createElement('div');
-            //     content.className = 'json-tree-content';
-            //     content.textContent = value;
+                const content = document.createElement('div');
+                content.className = 'json-tree-content';
+                content.textContent = value;
                 
-            //     item.appendChild(content);
+                item.appendChild(content);
 
-            //     header.addEventListener('click', function() {
-            //         content.classList.toggle('active');
-            //         header.querySelector('.json-tree-button').textContent = content.classList.contains('active') ? '-' : '+';
-            //     });
-            // }
+                header.addEventListener('click', function() {
+                    content.classList.toggle('active');
+                    header.querySelector('.json-tree-button').textContent = content.classList.contains('active') ? '-' : '+';
+                });
+            }
         }
 
         // Funktion, die bei Verlassen der Seite ausgeführt wird
@@ -360,6 +378,29 @@
             // Optional: Eine Bestätigungsmeldung anzeigen
             return 'Sind Sie sicher, dass Sie die Seite verlassen möchten?';
         });
+
+        // Funktion, die eine Promise zurückgibt, die aufgelöst wird, wenn der Button geklickt wird
+        function waitForDisclaimer() {
+            return new Promise((resolve) => {
+                const disclaimer_continue = document.getElementById('disclaimer-continue');
+                disclaimer_continue.addEventListener('click', function () {
+                    resolve();
+                });
+            });
+        }
+
+        function getElements() {
+        return {
+            closeBtn: document.getElementById('close-btn'),
+            errorModal: document.getElementById('error-modal'),
+            disclaimer_modal: document.getElementById('disclaimer-modal'),
+            disclaimer_continue: document.getElementById('disclaimer-continue'),
+            scanning_modal: document.getElementById('ecu-scan-modal'),
+            ecuScanTitle: document.getElementById('ecu-scan-title'),
+            ecuScanIcon: document.getElementById('ecu-scan-icon')
+        };
+    }
+
     </script>
 
 </body>

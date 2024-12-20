@@ -6,6 +6,11 @@
 #include "ff.h"
 #include <string.h>
 #include <stdlib.h>
+#include "errno.h"
+#include "messages.h"
+#include "queues.h"
+
+extern led_actuation_t led_actuation_order;
 
 esp_err_t checkonFilename(const char *filename, httpd_req_t *req, struct stat *file_stat, char *filepath);
 esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filename);
@@ -23,7 +28,8 @@ bool hasNTerminator(const char *str, size_t length);
 
 struct file_server_data {
     /* Base path of file storage */
-    char base_path[ESP_VFS_PATH_MAX + 1];
+    char base_path_sd[ESP_VFS_PATH_MAX + 1];
+    char base_path_flash[ESP_VFS_PATH_MAX + 1];
 
     /* Scratch buffer for temporary storage during file transfer */
     char scratch[SCRATCH_BUFSIZE];
