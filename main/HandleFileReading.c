@@ -71,7 +71,7 @@ esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, s
         //Actuate LED ###################################
         //#################################################
         led_actuation_order.LED_color=DEFAULT;
-        led_actuation_order.breaktime=100;
+        led_actuation_order.breaktime=20;
         xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
         /* Read file in chunks into the scratch buffer */
         chunksize = fread(chunk, 1, SCRATCH_BUFSIZE, fd);

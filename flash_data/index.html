@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StarTrace NextGen</title>
-    <script src="commonfunctions.js" defer></script>
-    <script src="startupfunctions.js" defer></script>
+    <script src="00_StartUp_getAssets.js" defer></script>
+    <script src="01_StartUp_ScanECus.js" defer></script>
+    <script src="02_StartUp_getDiagDescriptions.js" defer></script>
+    <script src="03_StartUp_PopulateTables.js" defer></script>
+    <script src="04_Common_DiagnosticRequest.js" defer></script>
+    <script src="05_Common_ShowContent.js" defer></script>
+    <script src="06_Common_HandleIdentifications.js" defer></script>
+    <script src="07_Common_InterpretData.js" defer></script>
+    <script src="99_Trash.js" defer></script>
     <style>
         /* Main Layout */
         body {
@@ -27,7 +34,7 @@
         }
         .menu ul li {
             padding: 15px;
-            text-align: center;
+            text-align: left; /* Change to left-aligned */
         }
         .menu ul li a {
             color: white;
@@ -221,9 +228,9 @@
             <!-- Content will be loaded from home.html -->
         </div>
         <div id="identification" class="content-section hidden">
-            <h1>Identification</h1>
-            <button onclick="fetchJson()">Fetch JSON</button>
-            <div id="json-output">JSON output will appear here...</div>
+            <!-- Content will be loaded from identification.html -->
+            <div class="tabs" id="tabs-container">
+            </div>
         </div>
         <div id="fault-codes" class="content-section hidden">
             <h1>Fault Codes</h1>
@@ -274,12 +281,31 @@
 
 
         let globalConfigJSON = {};
+        let globalDiagDescriptions = {};
 
         // Display disclaimer modal on first load
         window.onload = async function() {
             console.log("Script loaded");
-            await getInitialAssets();
-            const { closeBtn, errorModal, disclaimer_modal, disclaimer_continue, scanning_modal, ecuScanTitle, ecuScanIcon } = getElements();
+            //################################################
+            //Get initial Assets #############################
+            //////////////////////////////////////////////////
+            //config.json
+            let response=await getAsset('/config.json', 'application/json');
+            // Warten auf das Parsen der JSON-Antwort
+            const data = await response.json(); 
+            // Speichern der erhaltenen Daten in der globalen Variable
+            globalConfigJSON = data;
+
+            /////////////////////////////////////////////
+            //home.html
+            response = await getAsset('/home.html', 'text/html');
+            const homeContent = await response.text();
+            document.getElementById('home').innerHTML = homeContent;
+
+            //################################################
+            //Get Elements #############################
+            //////////////////////////////////////////////////
+            const { closeBtn, errorModal, disclaimer_modal, disclaimer_continue, scanning_modal, ecuScanTitle, ecuScanIcon } = await getElements();
 
             disclaimer_continue.addEventListener('click', async function () {
             // Disclaimer-Modal schließen
@@ -317,55 +343,26 @@
             ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
             await new Promise(resolve => setTimeout(resolve, 500));
             scanning_modal.style.display = 'none';
+            //################################################
             // Load home content and display it
-            await loadHomeContent();
-            showContent('home');
+            //////////////////////////////////////////////////
+
+            await showContent('home');
+            await populateTableDetectedECUs();
+            await populateTableCANConfig();
+            await populateTableWifi();
+            await showTab('detected-ecus');
+
+            //################################################
+            //Load Identification content and display it #############################
+            //////////////////////////////////////////////////
+            await HandleIdentifications();
+
+
+
         };
 
-        async function loadHomeContent() {
-            const response = await fetch('home.html');
-            const homeContent = await response.text();
-            document.getElementById('home').innerHTML = homeContent;
-        }
 
-        // Function to display JSON tree
-        function displayJsonTree(json, container) {
-
-
-            
-            container.innerHTML = ''; // Clear previous content
-            //Stack mit 3 Eigenschaften
-                //key: Startpunkt der JSON Struktur
-                //value: json object
-                //level: Hirarchielevel
-            const stack = [{ key: 'root', value: json, level: 0 }];
-
-            while (stack.length > 0) {
-                //Oberste Element des Stacks wird entfernt und in die Variablen key, value und level eingefügt
-                const { key, value, level } = stack.pop();
-                //Item wird erstellt und der CSS Klasse json-tree-item zugewiesen
-                const item = document.createElement('div');
-                item.className = 'json-tree-item';
-                //Item wird erstellt für Header
-                const header = document.createElement('div');
-                //2 CSS Klassen werden zugewiesen (auf einaml)
-                header.className = 'json-tree-header json-tree-level-' + level;
-                //Button wird erstellt mit + Zeichen und, und wird dem key zugewiesen
-                header.innerHTML = `<button class="json-tree-button">+</button> ${key.replace(/_/g, ' ')}`;
-                item.appendChild(header);
-
-                const content = document.createElement('div');
-                content.className = 'json-tree-content';
-                content.textContent = value;
-                
-                item.appendChild(content);
-
-                header.addEventListener('click', function() {
-                    content.classList.toggle('active');
-                    header.querySelector('.json-tree-button').textContent = content.classList.contains('active') ? '-' : '+';
-                });
-            }
-        }
 
         // Funktion, die bei Verlassen der Seite ausgeführt wird
         window.addEventListener('beforeunload', function (event) {
@@ -379,27 +376,8 @@
             return 'Sind Sie sicher, dass Sie die Seite verlassen möchten?';
         });
 
-        // Funktion, die eine Promise zurückgibt, die aufgelöst wird, wenn der Button geklickt wird
-        function waitForDisclaimer() {
-            return new Promise((resolve) => {
-                const disclaimer_continue = document.getElementById('disclaimer-continue');
-                disclaimer_continue.addEventListener('click', function () {
-                    resolve();
-                });
-            });
-        }
 
-        function getElements() {
-        return {
-            closeBtn: document.getElementById('close-btn'),
-            errorModal: document.getElementById('error-modal'),
-            disclaimer_modal: document.getElementById('disclaimer-modal'),
-            disclaimer_continue: document.getElementById('disclaimer-continue'),
-            scanning_modal: document.getElementById('ecu-scan-modal'),
-            ecuScanTitle: document.getElementById('ecu-scan-title'),
-            ecuScanIcon: document.getElementById('ecu-scan-icon')
-        };
-    }
+
 
     </script>
 

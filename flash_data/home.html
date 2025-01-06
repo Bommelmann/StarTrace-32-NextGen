@@ -8,6 +8,8 @@
         .tabs {
             overflow: hidden;
             background-color: #f1f1f1;
+            display: flex;
+            justify-content: space-around; /* Distribute tabs evenly */
         }
 
         .tablink {
@@ -17,6 +19,8 @@
             cursor: pointer;
             padding: 14px 16px;
             transition: 0.3s;
+            flex-grow: 1; /* Allow tabs to grow and fill the space */
+            text-align: center; /* Center text within each tab */
         }
 
         .tablink:hover {
@@ -36,6 +40,46 @@
         .tabcontent.hidden {
             display: none;
         }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        .checkmark {
+            color: green;
+            font-size: 16px;
+            margin-left: 5px;
+        }
+
+        /* Ensure all tables have the same column width */
+        .tabcontent table th:nth-child(1),
+        .tabcontent table td:nth-child(1) {
+            width: 50%;
+        }
+
+        .tabcontent table th:nth-child(2),
+        .tabcontent table td:nth-child(2) {
+            width: 50%;
+        }
     </style>
 </head>
 <body>
@@ -48,35 +92,54 @@
     <div id="detected-ecus" class="tabcontent">
         <h1>Detected ECUs</h1>
         <div id="json-tree"></div>
+        <table>
+            <tr>
+                <th>ECU Name</th>
+                <th>Diagnostic Version</th>
+            </tr>
+            <tbody>
+                <!-- Zeilen werden hier dynamisch hinzugefügt -->
+            </tbody>
+
+        </table>
     </div>
 
     <div id="can-configuration" class="tabcontent hidden">
         <h1>CAN Configuration</h1>
         <p>CAN configuration details go here.</p>
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+            </tr>
+            <tbody>
+                    <!-- Add more rows as needed -->
+            </tbody>
+
+        </table>
     </div>
 
     <div id="wifi-configuration" class="tabcontent hidden">
-        <h1>WiFi Configuration</h1>
+        <h1>External WiFi Configuration</h1>
         <p>WiFi configuration details go here.</p>
+        <table>
+            <tr>
+                <th>SSID</th>
+                <th>Passwort</th>
+            </tr>
+            <tbody>
+                <!-- Add more rows as needed -->
+            </tbody>
+        </table>
     </div>
 
     <script>
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablink");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
 
-        // Display JSON tree on the Detected ECUs tab
-        displayJsonTree(globalConfigJSON, document.getElementById('json-tree'));
+
+        window.onload = async function() {
+            console.log("Now on the home page");
+
+        }
     </script>
 </body>
 </html>

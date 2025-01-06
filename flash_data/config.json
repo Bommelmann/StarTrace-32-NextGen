@@ -1,6 +1,6 @@
 {
     "WIFI": {
-      "username": "",
+      "SSID": "",
       "password": "",
       "host": "",
       "path": ""
@@ -101,8 +101,7 @@
             "Status": "NotLoaded"
           }
           
-        ],
-          "DiagnosticDescription":""
+        ]
       },
       {
         "SA": 1,
@@ -164,8 +163,7 @@
             "Status": "NotLoaded"
           }
                     
-      ],
-      "DiagnosticDescription":""  
+      ]
       },
       {
         "SA": 3,
@@ -191,8 +189,7 @@
             "Status": "NotLoaded"
           }
           
-        ],
-          "DiagnosticDescription":""
+        ]
       },
       {
         "SA": 61,
@@ -258,8 +255,7 @@
             "Status": "NotLoaded"
           }
           
-      ],
-          "DiagnosticDescription":""
+      ]
 
       }
     ],

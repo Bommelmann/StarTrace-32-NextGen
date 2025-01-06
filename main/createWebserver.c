@@ -293,7 +293,7 @@ esp_err_t start_webserver(void)
     xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     static struct file_server_data *server_data=NULL;
    
-   //Handle Flash server data
+    // Handle Flash server data
     if (server_data) {
         ESP_LOGE(TAG, "File server already started");
         return ESP_ERR_INVALID_STATE;
@@ -308,93 +308,43 @@ esp_err_t start_webserver(void)
     strlcpy(server_data->base_path_flash, base_path_flash,
             sizeof(server_data->base_path_flash));
     strlcpy(server_data->base_path_sd, base_path_sd,
-        sizeof(server_data->base_path_sd));
-
-    /*
-    //Handle SD server data
-       //Handle Flash server data
-    if (server_data_sdcard) {
-        ESP_LOGE(TAG, "File server already started");
-        return ESP_ERR_INVALID_STATE;
-    }
-
-    // Allocate memory for server data 
-    server_data_sdcard = calloc(1, sizeof(struct file_server_data));
-    if (!server_data_sdcard) {
-        ESP_LOGE(TAG, "Failed to allocate memory for server data");
-        return ESP_ERR_NO_MEM;
-    }
-    strlcpy(server_data_sdcard->base_path, base_path_sd,
-            sizeof(server_data_sdcard->base_path));
-    */
+            sizeof(server_data->base_path_sd));
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.max_uri_handlers = 20;
 
     // Starten des HTTP-Servers
-        ESP_LOGD(TAG, "Starting HTTP Server on port: '%d'", config.server_port);
+    ESP_LOGD(TAG, "Starting HTTP Server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to start file server!");
         return ESP_FAIL;
     }
 
-        httpd_uri_t start_download_uri_config = {
-            .uri       = "/config.json",
-            .method    = HTTP_GET,
-            .handler   = start_download_handler,
-            .user_ctx  = server_data
-        };
-        httpd_register_uri_handler(server, &start_download_uri_config);
+    // Array von URIs und deren Handler
+    httpd_uri_t uris[] = {
+        { .uri = "/identification.html", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/home.html", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/config.json", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/00_StartUp_getAssets.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/01_StartUp_ScanECus.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/02_StartUp_getDiagDescriptions.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/03_StartUp_PopulateTables.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/04_Common_DiagnosticRequest.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/05_Common_ShowContent.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/06_Common_HandleIdentifications.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/07_Common_InterpretData.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/99_Trash.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/sdcard", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/uds_request", .method = HTTP_POST, .handler = uds_request_handler, .user_ctx = NULL },
+        { .uri = "/ws", .method = HTTP_GET, .handler = ws_handler, .user_ctx = NULL, .is_websocket = true }
+    };
 
-        httpd_uri_t start_download_uri_commonfunctions = {
-            .uri       = "/commonfunctions.js",
-            .method    = HTTP_GET,
-            .handler   = start_download_handler,
-            .user_ctx  = server_data
-        };
-        httpd_register_uri_handler(server, &start_download_uri_commonfunctions);
+    // URIs registrieren
+    for (int i = 0; i < sizeof(uris) / sizeof(uris[0]); i++) {
+        httpd_register_uri_handler(server, &uris[i]);
+    }
 
-        httpd_uri_t start_download_uri_startupfunctions = {
-            .uri       = "/startupfunctions.js",
-            .method    = HTTP_GET,
-            .handler   = start_download_handler,
-            .user_ctx  = server_data
-        };
-        httpd_register_uri_handler(server, &start_download_uri_startupfunctions);
-
-        httpd_uri_t start_download_uri_diagdescription = {
-            .uri       = "/sdcard",
-            .method    = HTTP_GET,
-            .handler   = start_download_handler,
-            .user_ctx  = server_data
-        };
-        httpd_register_uri_handler(server, &start_download_uri_diagdescription);
-
-        httpd_uri_t start_download_uri = {
-            .uri       = "/",
-            .method    = HTTP_GET,
-            .handler   = start_download_handler,
-            .user_ctx  = server_data
-        };
-        httpd_register_uri_handler(server, &start_download_uri);
-
-        httpd_uri_t uds_request_uri = {
-            .uri       = "/uds_request",
-            .method    = HTTP_POST,
-            .handler   = uds_request_handler,
-            .user_ctx  = NULL
-        };
-
-        httpd_register_uri_handler(server, &uds_request_uri);
-
-        httpd_uri_t ws_uri = {
-            .uri        = "/ws",
-            .method     = HTTP_GET,
-            .handler    = ws_handler,
-            .user_ctx   = NULL,
-            .is_websocket = true
-        };
-        httpd_register_uri_handler(server, &ws_uri);
-    
     return ESP_OK;
 }
 
