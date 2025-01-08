@@ -20,12 +20,17 @@
             margin: 0;
             padding: 0;
             display: flex;
+            min-height: 100vh; /* Ensure the body takes the full height of the viewport */
         }
         .menu {
             width: 200px;
             background-color: #333;
-            height: 100vh;
+            height: 100vh; /* Ensure the menu takes the full height of the viewport */
             padding: 0;
+            position: fixed; /* Fix the menu position */
+            top: 0;
+            left: 0;
+            overflow-y: auto; /* Add vertical scroll if needed */
         }
         .menu ul {
             list-style-type: none;
@@ -33,13 +38,15 @@
             margin: 0;
         }
         .menu ul li {
-            padding: 15px;
+            padding: 0; /* Remove padding to ensure buttons are adjacent */
             text-align: left; /* Change to left-aligned */
         }
         .menu ul li a {
             color: white;
             text-decoration: none;
             display: block;
+            background-color: #333;
+            padding: 15px; /* Add padding to the anchor instead of the list item */
         }
         .menu ul li a:hover {
             background-color: #575757;
@@ -47,6 +54,7 @@
         .content {
             flex-grow: 1;
             padding: 20px;
+            margin-left: 200px; /* Add margin to avoid content being hidden behind the fixed menu */
         }
         .content-section.hidden {
             display: none;
@@ -89,6 +97,18 @@
             z-index: 1000;
         }
 
+        .errormodal-light {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 1);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
         #ecu-scan-modal {
         display: none;
         justify-content: center;
@@ -109,6 +129,15 @@
         border-radius: 5px;
         width: 300px; /* Fixierte Breite, passend zum Ladekreis */
         max-width: 80%; /* Für Responsive Design */
+        text-align: center;
+        }
+
+        .errormodal-light-content {
+        background-color: #ee8b09cb;
+        padding: 20px;
+        border-radius: 5px;
+        width: 300px;
+        max-width: 80%;
         text-align: center;
         }
 
@@ -160,54 +189,7 @@
         .json-tree {
             margin-top: 20px;
         }
-        .json-tree-item {
-            margin: 5px 0;
-        }
-        .json-tree-header {
-            padding: 10px;
-            cursor: pointer;
-        }
-        .json-tree-header:hover {
-            background-color: #575757;
-        }
-        .json-tree-content {
-            display: none;
-            padding-left: 20px;
-        }
-        .json-tree-content.active {
-            display: block;
-        }
-        .json-tree-button {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .json-tree-level-0 {
-            background-color: #333;
-            color: white;
-        }
-        .json-tree-level-1 {
-            background-color: #555;
-            color: white;
-        }
-        .json-tree-level-2 {
-            background-color: #777;
-            color: white;
-        }
-        .json-tree-level-3 {
-            background-color: #999;
-            color: black;
-        }
-        .json-tree-level-4 {
-            background-color: #bbb;
-            color: black;
-        }
-        .json-tree-level-5 {
-            background-color: #ddd;
-            color: black;
-        }
+
     </style>
 </head>
 <body>
@@ -271,13 +253,17 @@
         </div>
     </div>
 
+    <!-- Error Modal Light -->
+    <div id="error-modal-light" class="errormodal-light">
+        <div class="errormodal-light-content">
+            <span id="close-btn-light" class="close-btn">&times;</span> <!-- Kreuz hinzufügen -->
+            <h2>Ooops! Something went wrong.</h2>
+            <p id="error-text-light"></p>
+        </div>
+    </div>
+
     <script>
         const closeBtn = document.getElementById('close-btn');
-
-        closeBtn.addEventListener('click', function() {
-            errorModal.style.display = 'none'; // Modal schließen
-        });
-
 
 
         let globalConfigJSON = {};
@@ -303,15 +289,22 @@
             document.getElementById('home').innerHTML = homeContent;
 
             //################################################
-            //Get Elements #############################
+            //Get HTML Elements #############################
             //////////////////////////////////////////////////
             const { closeBtn, errorModal, disclaimer_modal, disclaimer_continue, scanning_modal, ecuScanTitle, ecuScanIcon } = await getElements();
 
+            //Add Functions to the different Buttons ########
+            //////////////////////////////////////////////////
             disclaimer_continue.addEventListener('click', async function () {
             // Disclaimer-Modal schließen
             disclaimer_modal.style.display = 'none';
             // Scanning-Modal öffnen
             scanning_modal.style.display = 'flex';
+            });
+
+            closeBtn.addEventListener('click', async function () {
+            // Error-Modal schließen
+            errorModal.style.display = 'none';
             });
 
             disclaimer_modal.style.display = 'flex';
@@ -351,7 +344,6 @@
             await populateTableDetectedECUs();
             await populateTableCANConfig();
             await populateTableWifi();
-            await showTab('detected-ecus');
 
             //################################################
             //Load Identification content and display it #############################

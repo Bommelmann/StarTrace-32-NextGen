@@ -26,3 +26,5 @@ extern led_actuation_t led_actuation_order;
 
 
 void handle_uds_request_task();
+
+bool compare_buffers(const send_message_can_t *request, const IsoTpLinkContainer *response);

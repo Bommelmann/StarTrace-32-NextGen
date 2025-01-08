@@ -84,13 +84,12 @@
 </head>
 <body>
     <div class="tabs">
-        <button class="tablink" onclick="openTab(event, 'detected-ecus')">Detected ECUs</button>
-        <button class="tablink" onclick="openTab(event, 'can-configuration')">CAN Configuration</button>
-        <button class="tablink" onclick="openTab(event, 'wifi-configuration')">WiFi Configuration</button>
+        <button class="tablink" onclick="showTab('detected-ecus')">Detected ECUs</button>
+        <button class="tablink" onclick="showTab('can-configuration')">CAN Configuration</button>
+        <button class="tablink" onclick="showTab('wifi-configuration')">WiFi Configuration</button>
     </div>
 
     <div id="detected-ecus" class="tabcontent">
-        <h1>Detected ECUs</h1>
         <div id="json-tree"></div>
         <table>
             <tr>
@@ -105,8 +104,6 @@
     </div>
 
     <div id="can-configuration" class="tabcontent hidden">
-        <h1>CAN Configuration</h1>
-        <p>CAN configuration details go here.</p>
         <table>
             <tr>
                 <th>Parameter</th>
@@ -120,8 +117,6 @@
     </div>
 
     <div id="wifi-configuration" class="tabcontent hidden">
-        <h1>External WiFi Configuration</h1>
-        <p>WiFi configuration details go here.</p>
         <table>
             <tr>
                 <th>SSID</th>

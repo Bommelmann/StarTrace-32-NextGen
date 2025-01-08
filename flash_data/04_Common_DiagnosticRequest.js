@@ -42,7 +42,14 @@ async function DiagnosticRequest(request) {
     } catch (error) {
         // Fehlerbehandlung
         console.error('Fehler bei der Anfrage:', error);
-        showErrorModal(error.message + ". DiagService: " + request);
-        throw error;  // Fehler weitergeben, wenn nötig
+        showErrorModalLight(error.message + ". DiagService: " + request);
+
+        const artificialresponseData = {
+            "request": request,
+            "response": "Unknown"
+        };
+        const data = await artificialresponseData.json();
+        return data;
+        //throw error;  // Fehler weitergeben, wenn nötig
     }
 }

@@ -2,16 +2,12 @@ async function HandleIdentifications() {
     // First Check if the Diagnostic Descriptions are available
     // If not, show Error Modal
     if (globalDiagDescriptions.diagnostics.length > 0) {
-        // Iterate through the DiagDescriptions
         for (const ECUDiagDescriptions of globalDiagDescriptions.diagnostics) {
-            //Create a Tab for each ECU
-            await createTab(ECUDiagDescriptions.shortLabel);
+            //Create a Tab Buttonfor each ECU
+            await createTabButton(ECUDiagDescriptions.shortLabel);
+            //Create a Parent Container for each ECU
+            await createContent ('identification', ECUDiagDescriptions.shortLabel);   
 
-            //Display the Tab of the first ECU
-            if(globalDiagDescriptions.diagnostics.length==1){
-                await showTab(ECUDiagDescriptions.shortLabel);
-            }
-            
             // Iterate through the Identifications
             for (const Identification of ECUDiagDescriptions.DiagDescriptions.identifications) {
                 // Aufgabe 1////////////////////////////////////////////
@@ -19,6 +15,9 @@ async function HandleIdentifications() {
                 let Identifier = await getIdentifier(ECUDiagDescriptions.shortLabel);
                 let ComService = Identification.ComService.replace(/\s/g, "");
                 let response = await DiagnosticRequest(Identifier + ComService);
+                    // Aufgabe 1.1////////////////////////////////////////////
+                    // Identification Überschrift im Tab anzeigen
+                    await createHeading(ECUDiagDescriptions.shortLabel, Identification.ServiceName);
                 // Aufgabe 2////////////////////////////////////////////
                 // Diagnosedaten Interpretieren
                 // Iteriere durch die einzelnen Datentypen der Identification
@@ -28,10 +27,20 @@ async function HandleIdentifications() {
                     //Interpretierte Daten in Diagnosedatenbanken unter "Result" speichern
                     DataType.Result = Data;
                     //Aufgabe 3////////////////////////////////////////////
-                    //Diagosedaten Anzeigen
+                    //Diagosedaten Eintragen
+                    await createDataEntry(Identification.ServiceName, DataType);
+                    //Diagnosedaten Anzeigen
+                    // Check if the tab is currently active
+                    const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ECUDiagDescriptions.shortLabel;
+                    // Wenn der Tab aktiv ist, zeige den neuen Inhalt sofort an
+                    if (isActiveTab) {
+                        let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel);
+                        await showAllChildren(tmptab);
+                    }
 
                 }
             }
+            
         }
     } else {
         showErrorModal("Not possible to perform diagnostics, due to missing Diagnostic Descriptions");

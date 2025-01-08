@@ -101,4 +101,3 @@ async function populateTableWifi(){
             tableBody.appendChild(row);
 
 }
-
