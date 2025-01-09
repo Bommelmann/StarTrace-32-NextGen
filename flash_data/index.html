@@ -133,12 +133,12 @@
         }
 
         .errormodal-light-content {
-        background-color: #ee8b09cb;
-        padding: 20px;
-        border-radius: 5px;
-        width: 300px;
-        max-width: 80%;
-        text-align: center;
+            background-color: #ee8b09cb;
+            padding: 20px;
+            width: 100vw; /* Changed to 100vw to cover the entire viewport width */
+            max-width: 100vw; /* Ensure it doesn't exceed the viewport width */
+            text-align: center;
+            margin: 0; /* Remove any margins */
         }
 
         .modal-content h2 {
@@ -211,7 +211,7 @@
         </div>
         <div id="identification" class="content-section hidden">
             <!-- Content will be loaded from identification.html -->
-            <div class="tabs" id="tabs-container">
+            <div class="tabs" id="tabs-container-identification">
             </div>
         </div>
         <div id="fault-codes" class="content-section hidden">
@@ -340,7 +340,6 @@
             // Load home content and display it
             //////////////////////////////////////////////////
 
-            await showContent('home');
             await populateTableDetectedECUs();
             await populateTableCANConfig();
             await populateTableWifi();

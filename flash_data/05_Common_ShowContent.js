@@ -45,7 +45,7 @@ async function showAllChildren(element) {
     // Stelle sicher, dass das Element existiert
     if (!element) return;
       //Damit Tabellen richtig angzeigt werden, dürfen nicht alle Kinder sichtbar gemacht werden
-      if(element.tagName !== 'TABLE' && element.tagName !== 'TH' && element.tagName !== 'TR' && element.tagName !== 'TBODY' && element.tagName !== 'TD'){
+      if(element.tagName !== 'TABLE' && element.tagName !== 'TH' && element.tagName !== 'TR' && element.tagName !== 'TBODY' && element.tagName !== 'TD' && element.tagName !== 'SPAN'){
             // Setze das Element selbst sichtbar
             element.style.display = 'block';
         }
@@ -115,19 +115,31 @@ function delay(ms) {
 }
 
     // Funktion zum Erstellen neuer Tabs
-async function createTabButton(tabName) {
-    //Get Parent Container
-    const tabsContainer = document.getElementById('tabs-container');
+async function createTabButton(parentcontentName, tabcontentName) {
+    // Get Parent Container
+    const tabsContainer = document.getElementById(parentcontentName);
 
     // Neuen Tab-Button erstellen
     const newTabButton = document.createElement('button');
     newTabButton.className = 'tablink';
-    newTabButton.textContent = tabName;
-    newTabButton.setAttribute('onclick', `showTab('${tabName}')`);
+    newTabButton.textContent = tabcontentName;
+    newTabButton.setAttribute('onclick', `showTab('${tabcontentName}')`);
 
     // Tab-Button hinzufügen
     tabsContainer.appendChild(newTabButton);
 
+    // Add fixed position to the tab buttons
+    tabsContainer.style.position = 'fixed';
+    tabsContainer.style.top = '0';
+    tabsContainer.style.width = 'calc(100% - 250px)'; // Adjust width to fill screen from left menu to right edge
+    tabsContainer.style.zIndex = '1000';
+
+    // Ensure all buttons are equally wide
+    const tabButtons = tabsContainer.querySelectorAll('.tablink');
+    const buttonWidth = 100 / tabButtons.length;
+    tabButtons.forEach(button => {
+        button.style.width = `${buttonWidth}%`;
+    });
 }
 
 

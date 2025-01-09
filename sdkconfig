@@ -590,7 +590,7 @@ CONFIG_EXAMPLE_PIN_CS=10
 #
 # UDS Config
 #
-CONFIG_P2_CLIENT=2000
+CONFIG_P2_CLIENT=3000
 # end of UDS Config
 # end of Startrace Custom Configuration
 

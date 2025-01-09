@@ -4,10 +4,11 @@ async function HandleIdentifications() {
     if (globalDiagDescriptions.diagnostics.length > 0) {
         for (const ECUDiagDescriptions of globalDiagDescriptions.diagnostics) {
             //Create a Tab Buttonfor each ECU
-            await createTabButton(ECUDiagDescriptions.shortLabel);
+            await createTabButton('tabs-container-identification',ECUDiagDescriptions.shortLabel);
             //Create a Parent Container for each ECU
             await createContent ('identification', ECUDiagDescriptions.shortLabel);   
-
+            // Show the Content of the Identification Tab
+            await showContent('identification');
             // Iterate through the Identifications
             for (const Identification of ECUDiagDescriptions.DiagDescriptions.identifications) {
                 // Aufgabe 1////////////////////////////////////////////
@@ -17,7 +18,7 @@ async function HandleIdentifications() {
                 let response = await DiagnosticRequest(Identifier + ComService);
                     // Aufgabe 1.1////////////////////////////////////////////
                     // Identification Überschrift im Tab anzeigen
-                    await createHeading(ECUDiagDescriptions.shortLabel, Identification.ServiceName);
+                    await createHeading(ECUDiagDescriptions.shortLabel, Identification.ServiceName + " of ECU " + ECUDiagDescriptions.shortLabel);
                 // Aufgabe 2////////////////////////////////////////////
                 // Diagnosedaten Interpretieren
                 // Iteriere durch die einzelnen Datentypen der Identification
@@ -28,7 +29,7 @@ async function HandleIdentifications() {
                     DataType.Result = Data;
                     //Aufgabe 3////////////////////////////////////////////
                     //Diagosedaten Eintragen
-                    await createDataEntry(Identification.ServiceName, DataType);
+                    await createDataEntry(Identification.ServiceName + " of ECU " + ECUDiagDescriptions.shortLabel, DataType);
                     //Diagnosedaten Anzeigen
                     // Check if the tab is currently active
                     const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ECUDiagDescriptions.shortLabel;

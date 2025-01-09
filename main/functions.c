@@ -134,3 +134,10 @@ void bytes_to_hex_string(IsoTpLinkContainer *uds_rspns_isotp, uds_message_string
 
 
 }
+// Funktion zum sicheren Freigeben des Speichers
+void safe_free(void **ptr) {
+    if (ptr != NULL && *ptr != NULL) {
+        free(*ptr);
+        *ptr = NULL; // Setze den Zeiger auf NULL, um doppelte Freigabe zu verhindern
+    }
+}

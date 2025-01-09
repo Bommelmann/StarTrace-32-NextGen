@@ -7,7 +7,7 @@ async function DiagnosticRequest(request) {
     const link = "/uds_request?";
 
     // Definiere das Timeout (in Millisekunden)
-    const timeout = 3000; // 3 Sekunden
+    const timeout = 5000; // 5 Sekunden
 
     // Funktion, die ein Timeout zurückgibt
     function timeoutPromise() {
@@ -48,8 +48,7 @@ async function DiagnosticRequest(request) {
             "request": request,
             "response": "Unknown"
         };
-        const data = await artificialresponseData.json();
-        return data;
+        return artificialresponseData;
         //throw error;  // Fehler weitergeben, wenn nötig
     }
 }

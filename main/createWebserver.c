@@ -8,7 +8,7 @@ char* base_path_sd="/sdcard";
 
 esp_err_t uds_request_handler(httpd_req_t *req)
 {
-    ESP_LOGI(TAG,"req->uri: %s", req->uri);  
+    ESP_LOGD(TAG,"req->uri: %s", req->uri);  
     // Länge des Bodys ermitteln
     size_t buf_len = req->content_len;
     if (buf_len == 0) {
@@ -32,7 +32,7 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     }
     buf[ret] = '\0';
 
-    ESP_LOGI(TAG, "JSON-Daten: %s", buf);
+    ESP_LOGD(TAG, "JSON-Daten: %s", buf);
     // Nullterminator hinzufügen, um den Body als String zu behandeln
     
 

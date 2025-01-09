@@ -24,7 +24,7 @@ async function getAsset(link, Content_Type){
 
             // Prüfen, ob die Antwort erfolgreich war
             if (!response.ok) {
-                throw new Error(`HTTP-Error! Status: ${response.status}`);
+                throw new Error(`HTTP-Error! Status: ${response.status}` + " Link: " + link);
             }
 
             return response;

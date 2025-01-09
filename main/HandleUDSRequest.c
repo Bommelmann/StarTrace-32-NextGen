@@ -41,7 +41,7 @@ IsoTpLinkContainer *uds_rspns_isotp;
             xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
             if (uds_rqst_rspns_string.uds_request_string != NULL) {
                 ESP_LOGD(UDS_TAG, "UDS String Length: %d", (int)uds_rqst_rspns_string.uds_request_length);
-                ESP_LOGI(UDS_TAG, "UDS String Content: %s", uds_rqst_rspns_string.uds_request_string);
+                ESP_LOGD(UDS_TAG, "UDS String Content: %s", uds_rqst_rspns_string.uds_request_string);
 
                 // Convert string to hex, Übergabge Parameter 1: uds_message_string_t, Rückgabe Parameter 2: length
                 uds_rqst_hex = hex_string_to_bytes(&uds_rqst_rspns_string, &length);
@@ -83,7 +83,7 @@ IsoTpLinkContainer *uds_rspns_isotp;
             if (xQueueSend(isotp_send_message_queue, &uds_rqst_isotp, portMAX_DELAY) != pdPASS) {
                 ESP_LOGE(UDS_TAG, "Failed to send message to isoTP_message_queue");
             } else {
-                ESP_LOGI(UDS_TAG, "Message sent to isoTP_message_queue");
+                ESP_LOGD(UDS_TAG, "Message sent to isoTP_message_queue");
             }
             ESP_LOGD("P2_LOG", "CONFIG_P2_CLIENT: %d ms", (int)CONFIG_P2_CLIENT);
             ESP_LOGD("P2_LOG", "P2_CLIENT: %d ticks", (int)P2_CLIENT);
@@ -100,9 +100,9 @@ IsoTpLinkContainer *uds_rspns_isotp;
                 if (xQueueReceive(handle_uds_request_queue_container, &uds_rspns_isotp, P2_CLIENT) == pdPASS) {
                     //ESP_LOGI(UDS_TAG, "Received response from isotp_processing_task");
                     //Print out received data                                   
-                    ESP_LOGI(UDS_TAG, "Received ISO-TP message with length: %04X", uds_rspns_isotp->link.receive_size);
+                    ESP_LOGD(UDS_TAG, "Received ISO-TP message with length: %04X", uds_rspns_isotp->link.receive_size);
                         for (int i = 0; i < uds_rspns_isotp->link.receive_size; i++) {
-                            ESP_LOGI(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
+                            ESP_LOGD(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
                         }
                     
                     // Check if the response fits to the request
@@ -155,9 +155,6 @@ IsoTpLinkContainer *uds_rspns_isotp;
                             }
                     }        
 
-                    if (uds_rqst_isotp.buffer != NULL) {
-                        free(uds_rqst_isotp.buffer);
-                    }
                 }
                 //If nothing was received from the queue within EXAMPLE_P2_CLIENT, this code is being run
                 //Meaning the ECU has not responded
@@ -185,6 +182,9 @@ IsoTpLinkContainer *uds_rspns_isotp;
                 }        
 
             }  
+        }
+        if (uds_rqst_isotp.buffer != NULL) {
+            safe_free((void**)&uds_rqst_isotp.buffer);
         }                
     }
 }
