@@ -168,3 +168,36 @@ async function TestGetDiagDescriptions(){
    
    
        }
+     
+
+async function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablink");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+
+async function decimalToAscii(decimalNumber) {
+    // Wandelt die Dezimalzahl in einen Array von Bytes um
+    const bytes = [];
+    let remaining = decimalNumber;
+
+    // Solange die Zahl größer als 0 ist, extrahieren wir Bytes
+    while (remaining > 0) {
+        bytes.unshift(remaining % 256);  // Holen wir das niedrigste Byte (Modulo 256)
+        remaining = Math.floor(remaining / 256);  // Reduzieren wir die Zahl um 256
+    }
+
+    // Wandelt die extrahierten Bytes in ASCII-Zeichen um
+    return bytes
+        .map(byte => (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '')  // Nur druckbare ASCII-Zeichen
+        .join('');
+}

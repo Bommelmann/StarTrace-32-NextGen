@@ -14,41 +14,52 @@ async function DiagnosticRequest(request) {
         return new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout beim Abrufen der Daten')), timeout));
     }
 
-    try {
-        // Warte auf die erste der beiden Promises (fetch oder Timeout)
-        const response = await Promise.race([
-            fetch(link, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            }),
-            timeoutPromise() // Timeout abwarten
-        ]);
+    async function fetchRequest() {
+        try {
+            // Warte auf die erste der beiden Promises (fetch oder Timeout)
+            const response = await Promise.race([
+                fetch(link, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                }),
+                timeoutPromise() // Timeout abwarten
+            ]);
 
-        // Prüfen, ob die Antwort erfolgreich war
-        if (!response.ok) {
-            throw new Error(`HTTP-Error! Status: ${response.status}`);
+            // Prüfen, ob die Antwort erfolgreich war
+            if (!response.ok) {
+                throw new Error(`HTTP-Error! Status: ${response.status}`);
+            }
+
+            // Warten auf das Parsen der JSON-Antwort
+            const data = await response.json();
+
+            // Rückgabe der Antwortdaten
+            return data;
+
+        } catch (error) {
+            // Fehlerbehandlung
+            console.error('Fehler bei der Anfrage:', error);
+            showErrorModalLight(error.message + ". DiagService: " + request);
+
+            const artificialresponseData = {
+                "request": request,
+                "response": "FE"
+            };
+            return artificialresponseData;
         }
-
-        // Warten auf das Parsen der JSON-Antwort
-        const data = await response.json();
-
-        // Rückgabe der Antwortdaten
-        //console.log('Antwort vom Server:', data);
-        return data;
-
-    } catch (error) {
-        // Fehlerbehandlung
-        console.error('Fehler bei der Anfrage:', error);
-        showErrorModalLight(error.message + ". DiagService: " + request);
-
-        const artificialresponseData = {
-            "request": request,
-            "response": "FE"
-        };
-        return artificialresponseData;
-        //throw error;  // Fehler weitergeben, wenn nötig
     }
+
+    let data = await fetchRequest();
+
+    // Überprüfen, ob die Antwort "7F [any two digits] 21" enthält
+    const responsePattern = /7F..21/;
+    if (responsePattern.test(data.response)) {
+        console.log("Retrying request due to response containing '7F [any two digits] 21'");
+        data = await fetchRequest();
+    }
+
+    return data;
 }

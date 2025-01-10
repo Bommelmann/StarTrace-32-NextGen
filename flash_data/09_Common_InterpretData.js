@@ -169,26 +169,6 @@ async function interpretConvScale(RawData, DataType, PresentationsKey){
 
 }
 
-async function interpretConvRaw(RawData, DataType, PresentationsKey){
-    
-}
-
-async function decimalToAscii(decimalNumber) {
-    // Wandelt die Dezimalzahl in einen Array von Bytes um
-    const bytes = [];
-    let remaining = decimalNumber;
-
-    // Solange die Zahl größer als 0 ist, extrahieren wir Bytes
-    while (remaining > 0) {
-        bytes.unshift(remaining % 256);  // Holen wir das niedrigste Byte (Modulo 256)
-        remaining = Math.floor(remaining / 256);  // Reduzieren wir die Zahl um 256
-    }
-
-    // Wandelt die extrahierten Bytes in ASCII-Zeichen um
-    return bytes
-        .map(byte => (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '')  // Nur druckbare ASCII-Zeichen
-        .join('');
-}
 
 async function hexStringToAscii(hexString) {
     // Entfernt Leerzeichen und sorgt für gerade Länge

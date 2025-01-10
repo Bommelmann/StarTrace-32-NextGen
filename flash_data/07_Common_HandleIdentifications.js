@@ -4,11 +4,14 @@ async function HandleIdentifications() {
     if (globalDiagDescriptions.diagnostics.length > 0) {
         for (const ECUDiagDescriptions of globalDiagDescriptions.diagnostics) {
             //Create a Tab Buttonfor each ECU
-            await createTabButton('tabs-container-identification',ECUDiagDescriptions.shortLabel);
+            await createTabButton('tabs-container-identification',ECUDiagDescriptions.shortLabel, 'identification');
             //Create a Parent Container for each ECU
             await createContent ('identification', ECUDiagDescriptions.shortLabel);   
             // Show the Content of the Identification Tab
-            await showContent('identification');
+            //await showContent('identification');
+            //If the wait modal is visible, hide it
+            const errorModalWait = document.getElementById('error-modal-wait');
+            errorModalWait.style.display = 'none'; // Modal schließen
             // Iterate through the Identifications
             for (const Identification of ECUDiagDescriptions.DiagDescriptions.identifications) {
                 // Aufgabe 1////////////////////////////////////////////
@@ -16,10 +19,9 @@ async function HandleIdentifications() {
                 let Identifier = await getIdentifier(ECUDiagDescriptions.shortLabel);
                 let ComService = Identification.ComService.replace(/\s/g, "");
                 let response = await DiagnosticRequest(Identifier + ComService);
-                if (response=="")
-                    // Aufgabe 1.1////////////////////////////////////////////
-                    // Identification Überschrift im Tab anzeigen
-                    await createHeading(ECUDiagDescriptions.shortLabel, Identification.ServiceName + " of ECU " + ECUDiagDescriptions.shortLabel);
+                // Aufgabe 1.1////////////////////////////////////////////
+                // Identification Überschrift im Tab anzeigen
+                await createHeading(ECUDiagDescriptions.shortLabel+'identification', Identification.ServiceName + ECUDiagDescriptions.shortLabel);
                 // Aufgabe 2////////////////////////////////////////////
                 // Diagnosedaten Interpretieren
                 // Iteriere durch die einzelnen Datentypen der Identification
@@ -30,13 +32,13 @@ async function HandleIdentifications() {
                     DataType.Result = Data;
                     //Aufgabe 3////////////////////////////////////////////
                     //Diagosedaten Eintragen
-                    await createDataEntry(Identification.ServiceName + " of ECU " + ECUDiagDescriptions.shortLabel, DataType);
+                    await createDataEntry(Identification.ServiceName +  ECUDiagDescriptions.shortLabel, DataType);
                     //Diagnosedaten Anzeigen
                     // Check if the tab is currently active
-                    const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ECUDiagDescriptions.shortLabel;
+                    const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === (ECUDiagDescriptions.shortLabel);
                     // Wenn der Tab aktiv ist, zeige den neuen Inhalt sofort an
                     if (isActiveTab) {
-                        let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel);
+                        let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel+'identification');
                         await showAllChildren(tmptab);
                     }
 
