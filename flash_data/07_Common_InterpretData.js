@@ -10,7 +10,7 @@ async function interpretData(response, DataType) {
     const PresentationsKey = Object.keys(DataType.Presentations);
     // Wir müssen die Response erstmal in eine dezimale Zahl wandeln
     let responseDec = BigInt('0x' + responseWithoutIdentifier);
-    
+    let responseHexString=responseWithoutIdentifier;
     // Nun können wir die Response interpretieren
     // Zuerst müssen wir den Wert extrahieren, an der richtigen Stelle von der Response
         //Achtung: Manchmal hat DataType.Presentations ein anderes Format, in dem keine Bit Pos und Bit Length angegeben sind.
@@ -19,11 +19,14 @@ async function interpretData(response, DataType) {
             // Bit Length = StandardLength*8 gesetzt
     //Falls Bit Pos und Bit Length nicht vorhanden sind
     let RawData;
+    let RawDataHexString;
     if ((!DataType.Presentations[PresentationsKey[0]].hasOwnProperty("Bit Pos")) && (!DataType.Presentations[PresentationsKey[0]].hasOwnProperty("Bit Length"))) {
         RawData = await extractValue(responseDec, parseInt(DataType.Presentations[PresentationsKey[0]]["Byte Pos"],10), 0, parseInt(DataType.Presentations[PresentationsKey[0]]["Standard Length"],10)*8);
+        RawDataHexString = await extractValueHexString(responseHexString, parseInt(DataType.Presentations[PresentationsKey[0]]["Byte Pos"],10), 0, parseInt(DataType.Presentations[PresentationsKey[0]]["Standard Length"],10)*8);
     //Falls Bit Pos und Bit Length vorhanden sind
     }else{
         RawData = await extractValue(responseDec, parseInt(DataType.Presentations[PresentationsKey[0]]["Byte Pos"],10), parseInt(DataType.Presentations[PresentationsKey[0]]["Bit Pos"],10), parseInt(DataType.Presentations[PresentationsKey[0]]["Bit Length"],10));
+        RawDataHexString = await extractValueHexString(responseHexString, parseInt(DataType.Presentations[PresentationsKey[0]]["Byte Pos"],10), 0, parseInt(DataType.Presentations[PresentationsKey[0]]["Bit Length"],10));
     }
     let ProcessedData;
 
@@ -42,7 +45,7 @@ async function interpretData(response, DataType) {
         if(RawData==0){
             ProcessedData= "No Data";
         }else{
-            ProcessedData= decimalToAscii(RawData);
+            ProcessedData=await hexStringToAscii(RawDataHexString);
         }
     }
     // Hex Code (Conversion_DUMP)
@@ -64,7 +67,6 @@ async function interpretData(response, DataType) {
 async function extractValue(decimalNumber, bytePosition, bitPosition, bitLength) {
     // Konvertiere die Dezimalzahl in eine Binärdarstellung (mindestens 8 Bits je Byte)
     const binaryString = decimalNumber.toString(2).padStart(32, '0'); // für 32-Bit-Integer
-    //Es muss anders vorgegangen werden, wenn bitLength>8
     //Zusätzliche Bedingung: Bitlength ist durch 8 teilbar, und somit werden nur ganz Bytes extrahiert
     if ((bitLength >8)&&(bitLength%8==0)) {
         const startBit = bytePosition*8; //Bitposition muss nicht addiert werden, da eh immer =0 wenn bitLength%8==0
@@ -87,6 +89,28 @@ async function extractValue(decimalNumber, bytePosition, bitPosition, bitLength)
         return parseInt(extractedBits, 2);
     }
 }
+
+async function extractValueHexString(HexString, bytePosition, bitPosition, bitLength) {
+    if ((bitLength !=0)&&(bitLength%8==0)) {
+        const startString = bytePosition*2; //Bitposition muss nicht addiert werden, da eh immer =0 wenn bitLength%8==0
+        const endString = startString + (bitLength/4);
+        const extractedHexString = HexString.slice(startString, endString);
+        if (extractedHexString==""){
+            return "5858"
+        }
+        return extractedHexString;
+    //Nächster Spezialfall: Standard Length=0, da Länge des Datums variabel. In diesem Fall einfach Daten bis zum Ende von decimal Number extrahieren
+    }else if (bitLength==0) {
+        const startString = bytePosition*2; //Bitposition muss nicht addiert werden, da eh immer =0 wenn bitLength%8==0
+        const extractedHexString = HexString.slice(startString-1);
+        if (extractedHexString==""){
+            return "5858"
+        }
+        return extractedHexString; 
+    }
+}
+
+
 
 async function interpretConvScale(RawData, DataType, PresentationsKey){
     //Die Scale erstmal in ein Objekt schreiben
@@ -149,14 +173,28 @@ async function interpretConvRaw(RawData, DataType, PresentationsKey){
     
 }
 
-function decimalToAscii(decimalNumber) {
-    // Wandelt die Dezimalzahl in einen Hexadezimalstring um (padStart stellt sicher, dass wir volle Bytes haben)
-    const hexString = BigInt(decimalNumber).toString(16); 
+async function decimalToAscii(decimalNumber) {
+    // Wandelt die Dezimalzahl in einen Array von Bytes um
+    const bytes = [];
+    let remaining = decimalNumber;
 
-    // Zerlegt den Hexadezimalstring in Byte-Paare (je 2 Hex-Ziffern)
-    const byteArray = hexString.match(/.{2}/g).map(byte => parseInt(byte, 16));
+    // Solange die Zahl größer als 0 ist, extrahieren wir Bytes
+    while (remaining > 0) {
+        bytes.unshift(remaining % 256);  // Holen wir das niedrigste Byte (Modulo 256)
+        remaining = Math.floor(remaining / 256);  // Reduzieren wir die Zahl um 256
+    }
 
-    // Wandelt jedes Byte in ein ASCII-Zeichen um und gibt es als String zurück
-    return byteArray.map(byte => String.fromCharCode(byte)).join('');
+    // Wandelt die extrahierten Bytes in ASCII-Zeichen um
+    return bytes
+        .map(byte => (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '')  // Nur druckbare ASCII-Zeichen
+        .join('');
 }
 
+async function hexStringToAscii(hexString) {
+    // Entfernt Leerzeichen und sorgt für gerade Länge
+    hexString = hexString.replace(/\s+/g, '').padStart(hexString.length + (hexString.length % 2), '0');
+    // Zerlegt den Hex-String in Paare und wandelt jedes Byte in ein ASCII-Zeichen um
+    return hexString.match(/.{2}/g)  // Teilt den Hex-String in Paare
+        .map(byte => String.fromCharCode(parseInt(byte, 16)))  // Wandelt jedes Byte in ASCII um
+        .join('');  // Verbindet die ASCII-Zeichen zu einem String
+}

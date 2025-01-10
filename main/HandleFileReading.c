@@ -84,7 +84,10 @@ esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, s
                 /* Abort sending file */
                 httpd_resp_sendstr_chunk(req, NULL);
                 /* Respond with 500 Internal Server Error */
-                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
+                esp_err_t err = httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
+                if (err != ESP_OK) {
+                    ESP_LOGE("createwebserver.c", "Error sending 500 response: %s", esp_err_to_name(err));
+                }
             return ESP_FAIL;
         }
         }

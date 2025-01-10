@@ -46,7 +46,7 @@ async function DiagnosticRequest(request) {
 
         const artificialresponseData = {
             "request": request,
-            "response": "Unknown"
+            "response": "FE"
         };
         return artificialresponseData;
         //throw error;  // Fehler weitergeben, wenn nötig

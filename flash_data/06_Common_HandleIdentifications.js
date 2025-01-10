@@ -16,6 +16,7 @@ async function HandleIdentifications() {
                 let Identifier = await getIdentifier(ECUDiagDescriptions.shortLabel);
                 let ComService = Identification.ComService.replace(/\s/g, "");
                 let response = await DiagnosticRequest(Identifier + ComService);
+                if (response=="")
                     // Aufgabe 1.1////////////////////////////////////////////
                     // Identification Überschrift im Tab anzeigen
                     await createHeading(ECUDiagDescriptions.shortLabel, Identification.ServiceName + " of ECU " + ECUDiagDescriptions.shortLabel);

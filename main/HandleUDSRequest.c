@@ -91,12 +91,15 @@ IsoTpLinkContainer *uds_rspns_isotp;
             // Receive the response from the queue
             //Block Task for the timespan of EXAMPLE_P2_CLIENT which is specified in SDK Config
             //If nothing is received within EXAMPLE_P2_CLIENT, the task goes to the else statement
+
             /////////NRC 0x78 Handling////////////////////////
             //A while loop has to be implemented, to cover the NRC 0x78
             //0x78 (Response Pending) can be sent unlimited times by the ECU, until the actual response is sent
             //This is why we have to wait for the actual response
             bool response_pending = true;
             while(response_pending){
+                //Set response_pending directly to false, it will be set to true, only in the sections, where the continue statement is used
+                response_pending = false;
                 if (xQueueReceive(handle_uds_request_queue_container, &uds_rspns_isotp, P2_CLIENT) == pdPASS) {
                     //ESP_LOGI(UDS_TAG, "Received response from isotp_processing_task");
                     //Print out received data                                   
@@ -104,55 +107,58 @@ IsoTpLinkContainer *uds_rspns_isotp;
                         for (int i = 0; i < uds_rspns_isotp->link.receive_size; i++) {
                             ESP_LOGD(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
                         }
+                    //First Check if it is Tester Present
+                    if((uds_rspns_isotp->payload_buf[0] == 0x7E)&&(uds_rspns_isotp->payload_buf[1] == 0x00)){
+                        ESP_LOGI(UDS_TAG, "Tester Present: Received ISO-TP message");
+                        response_pending = true;
+                        continue;
+                    }
                     
                     // Check if the response fits to the request
                     //First Check for the correct ID
-                        ESP_LOGD(UDS_TAG, "uds_rspns_isotp->link.send_arbitration_id: %d", (int)uds_rspns_isotp->link.send_arbitration_id);
-                        ESP_LOGD(UDS_TAG, "uds_rspns_isotp->link.send_arbitration_id: %d", (int)uds_rqst_isotp.tx_id);
                     if (uds_rspns_isotp->link.send_arbitration_id == uds_rqst_isotp.tx_id) {
-                        //Then check for the correct payload
-                        //First check if it is a negative response
-                            ESP_LOGD(UDS_TAG, "uds_rspns_isotp->payload_buf[0] = %02x", uds_rspns_isotp->payload_buf[0]);
-                            ESP_LOGD(UDS_TAG, "uds_rqst_isotp.buffer[1] = %02x", uds_rqst_isotp.buffer[1]);
-                            ESP_LOGD(UDS_TAG, "uds_rqst_isotp.buffer[1] | 0x40  = %02x", uds_rqst_isotp.buffer[1] | 0x40 );
-                            if(uds_rspns_isotp->payload_buf[0] == 0x7f) {
-                                //Then check if the subsequent bytes match the request
-                                if(uds_rspns_isotp->payload_buf[1] == uds_rqst_isotp.buffer[0]){
-                                    //Then check if the NRC is "Response Pending"
-                                    //If so, we have to wait to receive the actual response
-                                    if(uds_rspns_isotp->payload_buf[2] == 0x78){
-                                        ESP_LOGI(UDS_TAG, "NRC: Response Pending. Waiting for actual response");
-                                        //Jetzt zurück zu xQueueReceive
-                                        continue;
-                                    }else {
-                                        response_pending = false;
-                                    }
-                                    ESP_LOGI(UDS_TAG, "NRC: Received ISO-TP message matches request");
-                                    bytes_to_hex_string(uds_rspns_isotp, &uds_rqst_rspns_string);
-                                    ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_request_string: %s", uds_rqst_rspns_string.uds_request_string);
-                                    ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_response_string %s", uds_rqst_rspns_string.uds_response_string);
-                                    if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
-                                        ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
-                                    } else {
-                                        ESP_LOGD(UDS_TAG, "Negative Response: Message sent to handle_uds_response_queue");
-                                    }
 
+                        //Then check for the correct payload
+                        /////////////////NRC Handling////////////////////////
+                        //Check if it is a negative response
+                        if(uds_rspns_isotp->payload_buf[0] == 0x7F) {
+                            //Then check if the subsequent bytes match the request
+                            if(uds_rspns_isotp->payload_buf[1] == uds_rqst_isotp.buffer[0]){
+                                //Then check if the NRC is "Response Pending", or it is the 
+                                //If so, we have to wait to receive the actual response
+                                if(uds_rspns_isotp->payload_buf[2] == 0x78){
+                                    ESP_LOGI(UDS_TAG, "NRC: Response Pending. Waiting for actual response");
+                                    //Jetzt zurück zu xQueueReceive
+                                    response_pending = true;
+                                    continue;
                                 }
-                            //Secondly check if it is a positive response and if the subsequent bytes match the request
-                            }else if((uds_rspns_isotp->payload_buf[0] == (uds_rqst_isotp.buffer[0] | 0x40 )) && compare_buffers(&uds_rqst_isotp,uds_rspns_isotp)){
-                                ESP_LOGI(UDS_TAG, "Positive Response: Received ISO-TP message matches request");
-                                //End While Loop for NRC 0x78
-                                response_pending = false;
+                                ESP_LOGI(UDS_TAG, "NRC: Received ISO-TP message matches request");
                                 bytes_to_hex_string(uds_rspns_isotp, &uds_rqst_rspns_string);
                                 ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_request_string: %s", uds_rqst_rspns_string.uds_request_string);
                                 ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_response_string %s", uds_rqst_rspns_string.uds_response_string);
                                 if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
                                     ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
                                 } else {
-                                    ESP_LOGD(UDS_TAG, "Positive Response: Message sent to handle_uds_response_queue");
+                                    ESP_LOGD(UDS_TAG, "Negative Response: Message sent to handle_uds_response_queue");
                                 }
-                                
+
                             }
+                        //Secondly check if it is a positive response and if the subsequent bytes match the request
+                        ///////////////////Positive Response Handling////////////////////////
+                        }else if((uds_rspns_isotp->payload_buf[0] == (uds_rqst_isotp.buffer[0] | 0x40 )) && compare_buffers(&uds_rqst_isotp,uds_rspns_isotp)){
+                            ESP_LOGI(UDS_TAG, "Positive Response: Received ISO-TP message matches request");
+                            //End While Loop for NRC 0x78
+                            response_pending = false;
+                            bytes_to_hex_string(uds_rspns_isotp, &uds_rqst_rspns_string);
+                            ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_request_string: %s", uds_rqst_rspns_string.uds_request_string);
+                            ESP_LOGD(UDS_TAG, "uds_rqst_rspns_string.uds_response_string %s", uds_rqst_rspns_string.uds_response_string);
+                            if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
+                                ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
+                            } else {
+                                ESP_LOGD(UDS_TAG, "Positive Response: Message sent to handle_uds_response_queue");
+                            }
+                            
+                        }
                     }        
 
                 }
