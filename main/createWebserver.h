@@ -1,3 +1,6 @@
+#ifndef CREATEWEBSERVER_H
+#define CREATEWEBSERVER_H
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
@@ -15,6 +18,7 @@
 #include "messages.h"
 #include "queues.h"
 #include "HandleFileReading.h"
+#include "mdns.h"
 
 extern led_actuation_t led_actuation_order;
 
@@ -31,12 +35,18 @@ esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath);
 
 void remove_question_mark(char *str);
 
-extern uint8_t Diag_Resp [8];
+esp_err_t on_client_disconnect(httpd_handle_t server, int sock_fd);
+
+esp_err_t restart_webserver(void);
+
+
 
 struct async_resp_arg {
     httpd_handle_t hd;
     int fd;
 };
+
+#endif // CREATEWEBSERVER_H
 
 extern httpd_handle_t server;
 extern QueueHandle_t handle_uds_request_queue;

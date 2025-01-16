@@ -5,6 +5,11 @@ static const char *TAG = "createwebserver.c";
 char* base_path_flash="/data";
 char* base_path_sd="/sdcard";
 
+//boolean to prevent endless loops when restarting the server:
+static bool webserver_restarted=false;
+//counter to prevent, that index.html is sent twice
+static uint8_t index_uri_counter=0;
+
 
 esp_err_t uds_request_handler(httpd_req_t *req)
 {
@@ -79,6 +84,7 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     free(json_str);
     cJSON_Delete(uds_rqst_rspns_json);
     free(uds_rqst_rspns_string.uds_request_string);
+    free(uds_rqst_rspns_string.uds_response_string);
 
     return ESP_OK;
 }
@@ -89,25 +95,39 @@ esp_err_t start_download_handler(httpd_req_t *req)
 {
     char filepathlfs[FILE_PATH_MAX_LFS];
     char filepathfatfs[FILE_PATH_MAX_FATFS];
-    FILE *fd = NULL;
+    
     struct stat file_stat;
     //char* ECUName;      // Linker Teil
     //char* DiagVersion;
     //char *ECUName_DiagVersion;
 
-    ESP_LOGI(TAG,"req->uri: %s", req->uri);      
+    ESP_LOGI(TAG,"req->uri: %s", req->uri);
+    if (strcmp(req->uri, "/home.html") == 0){
+        index_uri_counter=0;
+    }      
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //Case that this is the first request for index.html:
     if (strcmp(req->uri, "/") == 0)
-    {   //Index.html is stored in the basepath /data
-        char *filename_index = get_path_from_uri(filepathlfs, ((struct file_server_data *)req->user_ctx)->base_path_flash,
-                                                         "/index.html", sizeof(filepathlfs));
+    {   
+        //In order to prevent the server to send index.html twice (for unkknown reasons) the counter is used
+        if((index_uri_counter==0)||(index_uri_counter==2)){
+            //Index.html is stored in the basepath /data
+            char *filename_index = get_path_from_uri(filepathlfs, ((struct file_server_data *)req->user_ctx)->base_path_flash,
+                                                            "/index.html", sizeof(filepathlfs));
 
-        //Check if Filename has the correct format and if the file is existing
-        checkonFilename(filename_index, req, &file_stat, filepathlfs);
-        //ReadFiles and send over HTTP
-        readsendFile(filename_index, filepathlfs, req, &file_stat, fd);
+            //Check if Filename has the correct format and if the file is existing
+            checkonFilename(filename_index, req, &file_stat, filepathlfs);
+            //ReadFiles and send over HTTP
+            readsendFile(filename_index, filepathlfs, req, &file_stat);
+
+       }
+        if(index_uri_counter==3){
+            index_uri_counter=0;
+        }else{
+            index_uri_counter++;
+        }
+
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////                                                   
     //Case that the client requests a DiagDescription, the filename has to be deducted otherwise                                                        
@@ -217,7 +237,7 @@ esp_err_t start_download_handler(httpd_req_t *req)
             checkonFilename(filename, req, &file_stat, filepathfatfs);
 
             //ReadFiles and send over HTTP
-            readsendFile(filename, filepathfatfs, req, &file_stat, fd);
+            readsendFile(filename, filepathfatfs, req, &file_stat);
             free (filename);}
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////                                                        
@@ -231,9 +251,9 @@ esp_err_t start_download_handler(httpd_req_t *req)
         //Check if Filename has the correct format and if the file is existing
         checkonFilename(filename_data, req, &file_stat, filepathlfs);
         //ReadFiles and send over HTTP
-        readsendFile(filename_data, filepathlfs, req, &file_stat, fd);
+        readsendFile(filename_data, filepathlfs, req, &file_stat);
     }
-    //free (filename);
+    
     return ESP_OK;
 }
 
@@ -285,13 +305,70 @@ esp_err_t ws_handler(httpd_req_t *req)
     free(buf);
     return ret;
 }
+
+
+// Helper Function to print out the HTTP server event
+static const char *http_event_check(int32_t event_id) {
+
+    //In case of:
+        //The Webserver was restarted in the call before
+        //The Server Event is not "Disconnected" or "Error"
+    //Set the bool to "false"
+    if(webserver_restarted==true && event_id != HTTP_SERVER_EVENT_DISCONNECTED && event_id != HTTP_SERVER_EVENT_ERROR){
+        webserver_restarted=false;
+    }
+
+    switch (event_id) {
+        case HTTP_SERVER_EVENT_ERROR:
+            if (webserver_restarted==false){
+                restart_webserver();
+                index_uri_counter=0;
+                webserver_restarted=true;
+            } 
+            return "HTTP_SERVER_EVENT_ERROR";
+        case HTTP_SERVER_EVENT_START: return "HTTP_SERVER_EVENT_START";
+        case HTTP_SERVER_EVENT_ON_CONNECTED:
+            return "HTTP_SERVER_EVENT_ON_CONNECTED";
+        case HTTP_SERVER_EVENT_ON_HEADER: return "HTTP_SERVER_EVENT_ON_HEADER";
+        case HTTP_SERVER_EVENT_HEADERS_SENT: return "HTTP_SERVER_EVENT_HEADERS_SENT";
+        case HTTP_SERVER_EVENT_ON_DATA: return "HTTP_SERVER_EVENT_ON_DATA";
+        case HTTP_SERVER_EVENT_SENT_DATA: return "HTTP_SERVER_EVENT_SENT_DATA";
+        case HTTP_SERVER_EVENT_DISCONNECTED:
+            if (webserver_restarted==false){
+                //restart_webserver();
+                webserver_restarted=true;
+            }
+            return "HTTP_SERVER_EVENT_DISCONNECTED";
+        case HTTP_SERVER_EVENT_STOP: return "HTTP_SERVER_EVENT_STOP";
+        default: return "UNKNOWN_EVENT_ID";
+    }
+}
+
+// Event handler for HTTP server events
+static void http_event_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data) {
+    const char *event_name = http_event_check(event_id);
+    ESP_LOGD(TAG, "HTTP Event ID: %d (%s)", (unsigned int)event_id, event_name);
+
+}
+
+// Function to register the HTTP server event handler
+static void register_http_event_handler(void) {
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(ESP_HTTP_SERVER_EVENT,
+                    ESP_EVENT_ANY_ID,
+                    &http_event_handler,
+                    NULL,
+                    NULL));
+}
+
+static struct file_server_data *server_data=NULL;
 /* HTTP-Server initialisieren */
 esp_err_t start_webserver(void)
 {
     led_actuation_order.LED_color=DEFAULT;
     led_actuation_order.breaktime=50;
     xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
-    static struct file_server_data *server_data=NULL;
+    
    
     // Handle Flash server data
     if (server_data) {
@@ -312,13 +389,17 @@ esp_err_t start_webserver(void)
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.max_uri_handlers = 20;
+    //config.close_fn = on_client_disconnect;
 
     // Starten des HTTP-Servers
-    ESP_LOGD(TAG, "Starting HTTP Server on port: '%d'", config.server_port);
+    ESP_LOGI(TAG, "Starting HTTP Server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to start file server!");
+        ESP_LOGE(TAG, "Failed to start HTTP server!");
         return ESP_FAIL;
     }
+
+    // Register the HTTP server event handler
+    register_http_event_handler();
 
     // Array von URIs und deren Handler
     httpd_uri_t uris[] = {
@@ -335,6 +416,7 @@ esp_err_t start_webserver(void)
         { .uri = "/07_Common_HandleIdentifications.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/08_Common_HandleMeasurements.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/09_Common_InterpretData.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/favicon.ico", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/99_Trash.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/sdcard", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
@@ -474,5 +556,39 @@ void remove_question_mark(char *str) {
         src++;
     }
     *dst = '\0'; // Nullterminator hinzufügen
+
+}
+
+/*
+esp_err_t on_client_disconnect(httpd_handle_t server, int sock_fd)
+{
+    ESP_LOGI(TAG, "Client disconnected: socket_fd=%d", sock_fd);
+          // Ensure handle is non NULL
+       if (server != NULL) {
+           // Stop the httpd server
+           httpd_stop(server);
+       }
+    // Hier kannst du Ressourcen freigeben oder Statistiken aktualisieren
+    return ESP_OK;
+}
+*/
+
+esp_err_t restart_webserver(void)
+{
+        // Stop the httpd server
+        httpd_stop(server);
+        ESP_LOGI(TAG, "Server stopped");
+        // Free the server_data if it is already allocated
+        if (server_data) {
+            free(server_data);
+            server_data = NULL;
+            ESP_LOGI(TAG, "Server data freed");
+        }
+        // Start the httpd server
+        start_webserver();
+        return ESP_OK;
+
+
+    return ESP_OK;
 
 }

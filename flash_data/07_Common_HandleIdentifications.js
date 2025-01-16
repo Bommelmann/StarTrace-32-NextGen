@@ -21,7 +21,7 @@ async function HandleIdentifications() {
                 let response = await DiagnosticRequest(Identifier + ComService);
                 // Aufgabe 1.1////////////////////////////////////////////
                 // Identification Überschrift im Tab anzeigen
-                await createHeading(ECUDiagDescriptions.shortLabel+'identification', Identification.ServiceName + ECUDiagDescriptions.shortLabel);
+                await createHeading(ECUDiagDescriptions.shortLabel+'identification', Identification.ServiceName + ' ' + ECUDiagDescriptions.shortLabel);
                 // Aufgabe 2////////////////////////////////////////////
                 // Diagnosedaten Interpretieren
                 // Iteriere durch die einzelnen Datentypen der Identification
@@ -32,7 +32,7 @@ async function HandleIdentifications() {
                     DataType.Result = Data;
                     //Aufgabe 3////////////////////////////////////////////
                     //Diagosedaten Eintragen
-                    await createDataEntry(Identification.ServiceName +  ECUDiagDescriptions.shortLabel, DataType);
+                    await createDataEntry(Identification.ServiceName + ' ' + ECUDiagDescriptions.shortLabel, DataType);
                     //Diagnosedaten Anzeigen
                     // Check if the tab is currently active
                     const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === (ECUDiagDescriptions.shortLabel);

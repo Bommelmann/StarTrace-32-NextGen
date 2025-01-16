@@ -406,12 +406,27 @@
         window.addEventListener('beforeunload', function (event) {
             // Funktion ausführen, bevor die Seite geschlossen wird
             console.log('Die Seite wird geschlossen oder neu geladen.');
+            // Optional: Eine Bestätigungsmeldung anzeigen
+           // event.returnValue='Sind Sie sicher, dass Sie die Seite verlassen möchten?';
 
             // Speichern der config.json im Local Storage
             localStorage.setItem('globalConfigJSON', JSON.stringify(globalConfigJSON));
 
-            // Optional: Eine Bestätigungsmeldung anzeigen
-            return 'Sind Sie sicher, dass Sie die Seite verlassen möchten?';
+            /*
+            fetch(window.location.href, {
+                method: 'GET',
+                headers: {
+                    'Connection': 'close'
+                }
+                }).then(response => {
+                console.log('Connection header set to close');
+                }).catch(error => {
+                console.error('Error:', error);
+                });
+                */
+
+
+
         });
 
 

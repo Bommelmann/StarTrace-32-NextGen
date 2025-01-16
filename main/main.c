@@ -27,6 +27,7 @@
 
 #include "HandleUDSRequests.h"
 #include "HandleLED.h"
+#include "monitor_task.h"
 
 #define MAIN_TAG      "app_main"
 
@@ -48,7 +49,6 @@ httpd_handle_t server = NULL;
 
 led_actuation_t led_actuation_order;
 
-uint8_t Diag_Resp [8];
 
 /*
 static esp_err_t stop_webserver(httpd_handle_t server)
@@ -190,6 +190,9 @@ void app_main(void)
     //"handle_uds_request_tasks" takes orders from any task which fills the queue "handle_uds_request_queue"
     //It automatically sends the diagnostic request over CAN, waits for the response and sends this back
     xTaskCreatePinnedToCore(handle_uds_request_task, "UDS_handling", 4096, NULL, MAIN_TSK_PRIO, NULL, tskNO_AFFINITY);
+
+    //"monitor_task" is used for tracking performance metrics
+    xTaskCreate(monitor_task, "HeapMonitorTask", 2048, NULL, 1, NULL);
 
     ESP_LOGI(MAIN_TAG, "Tasks started");
     //Actuate LED ###################################

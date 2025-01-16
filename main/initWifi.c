@@ -44,9 +44,97 @@ static int s_retry_num = 0;
 /* FreeRTOS event group to signal when we are connected/disconnected */
 static EventGroupHandle_t s_wifi_event_group;
 
+static void start_mdns_service(void)
+{
+    esp_err_t mdns_init_result;
+    mdns_init_result=mdns_init();
+    if (mdns_init_result != ESP_OK){
+        ESP_LOGE(TAG_STA, "Failed to initialize mDNS service: %s", esp_err_to_name(mdns_init_result));
+    }
+    mdns_init_result=mdns_hostname_set("startrace");
+    if(mdns_init_result != ESP_OK){
+        ESP_LOGE(TAG_STA, "Failed to set mDNS hostname: %s", esp_err_to_name(mdns_init_result));
+    }
+    mdns_init_result=mdns_instance_name_set("startrace server");
+    if(mdns_init_result != ESP_OK){
+        ESP_LOGE(TAG_STA, "Failed to set mDNS instance name: %s", esp_err_to_name(mdns_init_result));
+    }
+
+    mdns_txt_item_t serviceTxtData[] = {
+        {"board", "esp32"},
+        {"path", "/"}
+    };
+
+    ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData,
+                                     sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
+   
+    
+}
+
+
+//Helper Function to print out the wifi event and perform other actions
+static const char *wifi_event_check(int32_t event_id) {
+    switch (event_id) {
+        case WIFI_EVENT_WIFI_READY: return "WIFI_EVENT_WIFI_READY";
+        case WIFI_EVENT_SCAN_DONE: return "WIFI_EVENT_SCAN_DONE";
+        case WIFI_EVENT_STA_START: return "WIFI_EVENT_STA_START";
+        case WIFI_EVENT_STA_STOP: return "WIFI_EVENT_STA_STOP";
+        case WIFI_EVENT_STA_CONNECTED: return "WIFI_EVENT_STA_CONNECTED";
+        case WIFI_EVENT_STA_DISCONNECTED: return "WIFI_EVENT_STA_DISCONNECTED";
+        case WIFI_EVENT_STA_AUTHMODE_CHANGE: return "WIFI_EVENT_STA_AUTHMODE_CHANGE";
+        case WIFI_EVENT_STA_WPS_ER_SUCCESS: return "WIFI_EVENT_STA_WPS_ER_SUCCESS";
+        case WIFI_EVENT_STA_WPS_ER_FAILED: return "WIFI_EVENT_STA_WPS_ER_FAILED";
+        case WIFI_EVENT_STA_WPS_ER_TIMEOUT: return "WIFI_EVENT_STA_WPS_ER_TIMEOUT";
+        case WIFI_EVENT_STA_WPS_ER_PIN: return "WIFI_EVENT_STA_WPS_ER_PIN";
+        case WIFI_EVENT_STA_WPS_ER_PBC_OVERLAP: return "WIFI_EVENT_STA_WPS_ER_PBC_OVERLAP";
+        case WIFI_EVENT_AP_START: return "WIFI_EVENT_AP_START";
+        case WIFI_EVENT_AP_STOP: return "WIFI_EVENT_AP_STOP";
+        case WIFI_EVENT_AP_STACONNECTED:
+            restart_webserver();
+            return "WIFI_EVENT_AP_STACONNECTED";
+        case WIFI_EVENT_AP_STADISCONNECTED:
+            restart_webserver();
+            return "WIFI_EVENT_AP_STADISCONNECTED";
+        case WIFI_EVENT_AP_PROBEREQRECVED: return "WIFI_EVENT_AP_PROBEREQRECVED";
+        case WIFI_EVENT_FTM_REPORT: return "WIFI_EVENT_FTM_REPORT";
+        case WIFI_EVENT_STA_BSS_RSSI_LOW: return "WIFI_EVENT_STA_BSS_RSSI_LOW";
+        case WIFI_EVENT_ACTION_TX_STATUS: return "WIFI_EVENT_ACTION_TX_STATUS";
+        case WIFI_EVENT_ROC_DONE: return "WIFI_EVENT_ROC_DONE";
+        case WIFI_EVENT_STA_BEACON_TIMEOUT: return "WIFI_EVENT_STA_BEACON_TIMEOUT";
+        case WIFI_EVENT_CONNECTIONLESS_MODULE_WAKE_INTERVAL_START: return "WIFI_EVENT_CONNECTIONLESS_MODULE_WAKE_INTERVAL_START";
+        case WIFI_EVENT_AP_WPS_RG_SUCCESS: return "WIFI_EVENT_AP_WPS_RG_SUCCESS";
+        case WIFI_EVENT_AP_WPS_RG_FAILED: return "WIFI_EVENT_AP_WPS_RG_FAILED";
+        case WIFI_EVENT_AP_WPS_RG_TIMEOUT: return "WIFI_EVENT_AP_WPS_RG_TIMEOUT";
+        case WIFI_EVENT_AP_WPS_RG_PIN: return "WIFI_EVENT_AP_WPS_RG_PIN";
+        case WIFI_EVENT_AP_WPS_RG_PBC_OVERLAP: return "WIFI_EVENT_AP_WPS_RG_PBC_OVERLAP";
+        case WIFI_EVENT_ITWT_SETUP: return "WIFI_EVENT_ITWT_SETUP";
+        case WIFI_EVENT_ITWT_TEARDOWN: return "WIFI_EVENT_ITWT_TEARDOWN";
+        case WIFI_EVENT_ITWT_PROBE: return "WIFI_EVENT_ITWT_PROBE";
+        case WIFI_EVENT_ITWT_SUSPEND: return "WIFI_EVENT_ITWT_SUSPEND";
+        case WIFI_EVENT_TWT_WAKEUP: return "WIFI_EVENT_TWT_WAKEUP";
+        case WIFI_EVENT_BTWT_SETUP: return "WIFI_EVENT_BTWT_SETUP";
+        case WIFI_EVENT_BTWT_TEARDOWN: return "WIFI_EVENT_BTWT_TEARDOWN";
+        case WIFI_EVENT_NAN_STARTED: return "WIFI_EVENT_NAN_STARTED";
+        case WIFI_EVENT_NAN_STOPPED: return "WIFI_EVENT_NAN_STOPPED";
+        case WIFI_EVENT_NAN_SVC_MATCH: return "WIFI_EVENT_NAN_SVC_MATCH";
+        case WIFI_EVENT_NAN_REPLIED: return "WIFI_EVENT_NAN_REPLIED";
+        case WIFI_EVENT_NAN_RECEIVE: return "WIFI_EVENT_NAN_RECEIVE";
+        case WIFI_EVENT_NDP_INDICATION: return "WIFI_EVENT_NDP_INDICATION";
+        case WIFI_EVENT_NDP_CONFIRM: return "WIFI_EVENT_NDP_CONFIRM";
+        case WIFI_EVENT_NDP_TERMINATED: return "WIFI_EVENT_NDP_TERMINATED";
+        case WIFI_EVENT_HOME_CHANNEL_CHANGE: return "WIFI_EVENT_HOME_CHANNEL_CHANGE";
+        case WIFI_EVENT_STA_NEIGHBOR_REP: return "WIFI_EVENT_STA_NEIGHBOR_REP";
+        case WIFI_EVENT_MAX: return "WIFI_EVENT_MAX";
+        default: return "UNKNOWN_EVENT_ID";
+    }
+}
+
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
+    const char *event_name = wifi_event_check(event_id);
+    ESP_LOGD("WiFi Event Handler", "Event ID: %d (%s)", (unsigned int) event_id, event_name);
+
     led_actuation_order.LED_color=DEFAULT;
     led_actuation_order.breaktime=100;
     xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
@@ -232,7 +320,9 @@ void InitWifi(void){
     esp_netif_set_default_netif(esp_netif_sta);
 
     /* Enable napt on the AP netif */
-    if (esp_netif_napt_enable(esp_netif_ap) != ESP_OK) {
+    if (esp_netif_napt_enable(esp_netif_sta) != ESP_OK) {
         ESP_LOGE(TAG_STA, "NAPT not enabled on the netif: %p", esp_netif_ap);
     }
+
+    start_mdns_service();
 }

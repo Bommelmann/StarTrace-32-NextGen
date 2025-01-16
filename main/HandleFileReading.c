@@ -51,7 +51,8 @@ esp_err_t checkonFilename(const char* filename, httpd_req_t *req, struct stat *f
 
 }
 
-esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, struct stat *file_stat,FILE *fd){
+esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, struct stat *file_stat){
+    FILE *fd = NULL;
 
     ESP_LOGD(TAG,"Filepath at beginning of readsendFile: %s", filepath);
     fd = fopen(filepath, "r");
@@ -59,12 +60,14 @@ esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, s
         ESP_LOGE(TAG, "Failed to read existing file : %s", filepath);
         /* Respond with 500 Internal Server Error */
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to read existing file");
+        fclose(fd);
         return ESP_FAIL;
     }
 
     ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filename, file_stat->st_size);
     set_content_type_from_file(req, filename);
     /* Retrieve the pointer to scratch buffer for temporary storage */
+    ESP_LOGD(TAG, "Freier Heap vor Pointer auf Scratch Buffer: %d Bytes", (unsigned int) esp_get_free_heap_size());
     char *chunk = ((struct file_server_data *)req->user_ctx)->scratch;
     size_t chunksize;
     do {
@@ -73,34 +76,52 @@ esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, s
         led_actuation_order.LED_color=DEFAULT;
         led_actuation_order.breaktime=20;
         xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
+        ESP_LOGD(TAG, "Freier Heap vor read into Scratch Buffer: %d Bytes", (unsigned int) esp_get_free_heap_size());
         /* Read file in chunks into the scratch buffer */
         chunksize = fread(chunk, 1, SCRATCH_BUFSIZE, fd);
+        ESP_LOGD(TAG, "Freier Heap nach read into Scratch Buffer: %d Bytes", (unsigned int) esp_get_free_heap_size());
 
         if (chunksize > 0) {
-            /* Send the buffer contents as HTTP response chunk */
-            if (httpd_resp_send_chunk(req, chunk, chunksize) != ESP_OK) {
-                fclose(fd);
-                ESP_LOGE(TAG, "File sending failed!");
-                /* Abort sending file */
-                httpd_resp_sendstr_chunk(req, NULL);
-                /* Respond with 500 Internal Server Error */
-                esp_err_t err = httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
-                if (err != ESP_OK) {
-                    ESP_LOGE("createwebserver.c", "Error sending 500 response: %s", esp_err_to_name(err));
+            bool retry_send=true;
+            uint8_t retry_count=0;
+            while(retry_send==true){
+                esp_err_t resp_chunk_send;
+                resp_chunk_send=httpd_resp_send_chunk(req, chunk, chunksize);
+                /* Send the buffer contents as HTTP response chunk */
+                if (resp_chunk_send==ESP_OK){
+                    retry_send=false;
+                     vTaskDelay(10 / portTICK_PERIOD_MS);  // Kleine Pause (10ms)
                 }
-            return ESP_FAIL;
-        }
+                if (resp_chunk_send != ESP_OK) {
+                    retry_count++;
+                    ESP_LOGE(TAG, "File sending failed...retrying");
+                    vTaskDelay(100 / portTICK_PERIOD_MS);
+                    if(retry_count==1){
+                        retry_send=false;
+                        fclose(fd);
+                        ESP_LOGE(TAG, "File sending failed!");
+                        /* Abort sending file */
+                        httpd_resp_sendstr_chunk(req, NULL);
+                        /* Respond with 500 Internal Server Error */
+                        esp_err_t err = httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
+                        if (err != ESP_OK) {
+                            ESP_LOGE("createwebserver.c", "Error sending 500 response: %s", esp_err_to_name(err));
+                        }
+                        return ESP_FAIL;
+                    }
+
+                }
+            }
         }
 
         /* Keep looping till the whole file is sent */
     } while (chunksize != 0);
 
+    httpd_resp_send_chunk(req, NULL, 0); // Signalisiert das Ende der Übertragung
     /* Close file after sending complete */
     fclose(fd);
     ESP_LOGI(TAG, "File sending successful");
-    
-    httpd_resp_send_chunk(req, NULL, 0); // Signalisiert das Ende der Übertragung
-return ESP_OK;
+    return ESP_OK;
 }
 
 

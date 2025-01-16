@@ -1,3 +1,6 @@
+#ifndef HANDLE_FILE_READING_H
+#define HANDLE_FILE_READING_H
+
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
@@ -14,7 +17,7 @@ extern led_actuation_t led_actuation_order;
 
 esp_err_t checkonFilename(const char *filename, httpd_req_t *req, struct stat *file_stat, char *filepath);
 esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filename);
-esp_err_t readsendFile(const char *filename, char * filepath, httpd_req_t *req, struct stat *file_stat,FILE *fd);
+esp_err_t readsendFile(const char *filename, char * filepath, httpd_req_t *req, struct stat *file_stat);
 bool findFile(const char *ECUName, const char *DiagVersion, char *filepath, char *filename);
 int extract_hex_value_from_filename(const char *filename);
 int extract_hex_value_from_DiagVers(const char *DiagVersion);
@@ -24,7 +27,7 @@ bool hasNTerminator(const char *str, size_t length);
 #define FILE_PATH_MAX 256
 
 /* Scratch buffer size */
-#define SCRATCH_BUFSIZE  8192
+#define SCRATCH_BUFSIZE  4096
 
 struct file_server_data {
     /* Base path of file storage */
@@ -39,3 +42,4 @@ struct file_server_data {
     (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
 
 
+#endif // HANDLE_FILE_READING_H

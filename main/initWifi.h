@@ -12,6 +12,8 @@
 #include "lwip/sys.h"
 #include "messages.h"
 #include "queues.h"
+#include "createWebserver.h"
+#include "mdns.h"
 
 extern led_actuation_t led_actuation_order;
 

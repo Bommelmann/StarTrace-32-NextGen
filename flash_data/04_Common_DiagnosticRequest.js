@@ -52,7 +52,18 @@ async function DiagnosticRequest(request) {
         }
     }
 
-    let data = await fetchRequest();
+    let data;
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+        data = await fetchRequest();
+        if (data.response !== "FE") {
+            break;
+        }
+        attempts++;
+        console.log(`Retrying request (${attempts}/${maxAttempts}) due to failure.`);
+    }
 
     // Überprüfen, ob die Antwort "7F [any two digits] 21" enthält
     const responsePattern = /7F..21/;
