@@ -54,7 +54,8 @@ async function interpretData(response, DataType) {
     }
     // Conversion Factor Offset ist Schwachsinnsdatentyp aus der Diagnosedatenbank, wird gleich behandelt wie Raw
     else if((DataType.Presentations[PresentationsKey[0]].Convselector).includes("CONVERSION_FACTOR_OFFSET")) {
-        ProcessedData = RawData.toString();
+        ProcessedData = await interpretConvScale (RawData, DataType, PresentationsKey);
+        //ProcessedData = RawData.toString();
     }
     else{
         showErrorModal("Datentyp aus Diagnosedatenbank unbekannt/nicht implementiert: "+ (DataType.Presentations[PresentationsKey[0]].Convselector));
@@ -131,13 +132,14 @@ async function interpretConvScale(RawData, DataType, PresentationsKey){
                 // Scale hat die Objekte "Offset"&"Factor"
                 if (scale.hasOwnProperty("Offset")&&scale.hasOwnProperty("Factor")) {
                     //Erstmal alle Daten in Variablen schreiben
-                    let ScaleOffset=parseInt(scale["Offset"],10);
-                    let ScaleFactor=parseInt(scale["Factor"],10);
+                    let ScaleOffset=parseFloat(scale["Offset"],10);
+                    let ScaleFactor=parseFloat(scale["Factor"],10);
                     //Fall 1.1:
                         //Der Wert ist größer als Low Bound, und kleiner als Up Bound --> Dann Wert umerechnen
-                    if (RawData >= ScaleLowBound && RawData <= ScaleUpBound) {
-                        return (RawData*ScaleFactor)+ScaleOffset;
-                    }
+                        //Wenn Low Bound und Up Bound =0 sind, dann soll auch nicht darauf geprüft werden, weil es keinen Sinn ergibt
+                        if ((RawData >= ScaleLowBound && RawData <= ScaleUpBound)||(ScaleLowBound==0&&ScaleUpBound==0)) {
+                            return (RawData*ScaleFactor)+ScaleOffset;
+                        }
             //Fall 2:
                 // Scale hat nicht die Objekte "Offset"&"Factor"
                 }else{

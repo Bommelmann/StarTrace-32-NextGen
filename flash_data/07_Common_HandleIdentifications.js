@@ -26,6 +26,11 @@ async function HandleIdentifications() {
                 // Diagnosedaten Interpretieren
                 // Iteriere durch die einzelnen Datentypen der Identification
                 for (const DataType of Identification.Response.DataTypes) {
+
+                //Testzwecke
+                if (Identification.ServiceName=="ReadF442 ECC System Voltage"){
+                    console.log(response.response);
+                    }
                     //Daten interpretieren
                     let Data = await interpretData(response.response, DataType);
                     //Interpretierte Daten in Diagnosedatenbanken unter "Result" speichern

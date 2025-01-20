@@ -16,7 +16,7 @@
     <script src="09_Common_InterpretData.js" defer></script>
     <script src="99_Trash.js" defer></script>
     <style>
-        /* Main Layout */
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -24,202 +24,251 @@
             display: flex;
             min-height: 100vh; /* Ensure the body takes the full height of the viewport */
         }
+        /* ####################################### */
+        /* ####################################### */
+        /* Menu Styles*/
+        
         .menu {
-            width: 200px;
-            background-color: #333;
-            height: 100vh; /* Ensure the menu takes the full height of the viewport */
-            padding: 0;
-            position: fixed; /* Fix the menu position */
-            top: 0;
-            left: 0;
-            overflow-y: auto; /* Add vertical scroll if needed */
+            margin-top: 50px; /* Adjust this value based on the height of your header */
+            background-color: #333; /* Dark background color */
+            position: fixed; /* Fix position to the viewport */
+            top: 0; /* Align to the top */
+            left: -250px; /* Initially hide the menu */
+            width: 175px; /* Set width */
+            height: 100%; /* Full viewport height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            transition: left 0.3s ease; /* Smooth transition for opening/closing */
+        }
+        .menu.open {
+            left: 0; /* Show the menu when open */
         }
         .menu ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
+            list-style-type: none; /* Remove default list styling */
+            padding: 0; /* Remove padding */
+            margin: 0; /* Remove margin */
         }
         .menu ul li {
             padding: 0; /* Remove padding to ensure buttons are adjacent */
-            text-align: left; /* Change to left-aligned */
+            text-align: left; /* Align text to the left */
         }
         .menu ul li a {
-            color: white;
-            text-decoration: none;
-            display: block;
-            background-color: #333;
-            padding: 15px; /* Add padding to the anchor instead of the list item */
+            display: block; /* Make the link a block element */
+            padding: 15px; /* Add padding */
+            color: white; /* White text color */
+            text-decoration: none; /* Remove underline */
+            background-color: #333; /* Dark background color */
         }
         .menu ul li a:hover {
-            background-color: #575757;
+            background-color: #575757; /* Change background color on hover */
+        }
+        .header {
+            background-color: #2c6594; /* Dark background color */
+            color: white; /* White text color */
+            height: 50px; /* Set header height */
+            line-height: 50px; /* Vertically center content */
+            padding: 0px 10px; /* Add padding */
+            text-align: center; /* Align text to the left */
+            position: fixed; /* Fix position to the viewport */
+            width: 100%; /* Full width */
+            top: 0; /* Align to the top */
+            z-index: 1000; /* Ensure it is above other elements */
+            display: flex; /* Use flexbox for alignment */
+            align-items: center; /* Vertically center items */
+            margin: 0; /* Remove margin */
+        }
+        .hamburger {
+            font-size: 30px; /* Set font size */
+            cursor: pointer; /* Change cursor to pointer */
+            background: none; /* Remove background */
+            border: none; /* Remove border */
+            color: white; /* White text color */
+            padding: 0; /* Remove padding */
+            margin-right: 10px; /* Add margin to the right */
         }
         .content {
-            flex-grow: 1;
-            padding: 20px;
-            margin-left: 200px; /* Add margin to avoid content being hidden behind the fixed menu */
+            flex-grow: 1; /* Allow content to grow */
+            padding: 5px; /* Add padding */
+            margin-left: 0px; /* Initial margin */
+            transition: margin-left 0.3s ease; /* Smooth transition for margin */
+            width: 80%; /* Set width */
+        }
+        .menu.open + .content {
+            margin-left: 185px; /* Adjust margin when menu is open */
         }
         .content-section.hidden {
-            display: none;
+            display: none; /* Hide content sections */
         }
-
+        @media (min-width: 768px) {
+            .menu {
+                left: 0; /* Show menu on larger screens */
+            }
+            .content {
+                margin-left: 200px; /* Adjust margin on larger screens */
+            }
+            .hamburger {
+                display: none; /* Hide hamburger on larger screens */
+            }
+        }
         /* JSON Output Styling */
         #json-output {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f4f4f4;
-            border: 1px solid #ccc;
-            width: 50%;
-            text-align: center;
-            font-size: 16px;
+            margin-top: 20px; /* Add margin to the top */
+            padding: 20px; /* Add padding */
+            background-color: #f4f4f4; /* Light background color */
+            border: 1px solid #ccc; /* Light border */
+            width: 50%; /* Set width */
+            text-align: center; /* Center text */
+            font-size: 16px; /* Set font size */
         }
 
         /* Modal Styling */
         .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; /* Hide modal by default */
+            position: fixed; /* Fix position to the viewport */
+            top: 0; /* Align to the top */
+            left: 0; /* Align to the left */
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+            z-index: 1000; /* Ensure it is above other elements */
         }
         .errormodal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 1);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; /* Hide modal by default */
+            position: fixed; /* Fix position to the viewport */
+            top: 0; /* Align to the top */
+            left: 0; /* Align to the left */
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            background-color: rgba(0, 0, 0, 1); /* Opaque background */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+            z-index: 1000; /* Ensure it is above other elements */
         }
 
         .errormodal-light {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: rgba(0, 0, 0, 1);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; /* Hide modal by default */
+            position: fixed; /* Fix position to the viewport */
+            bottom: 0; /* Align to the bottom */
+            left: 0; /* Align to the left */
+            width: 100%; /* Full width */
+            background-color: rgba(0, 0, 0, 1); /* Opaque background */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+            z-index: 1000; /* Ensure it is above other elements */
         }
 
         .errormodal-wait {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: rgba(0, 0, 0, 1);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; /* Hide modal by default */
+            position: fixed; /* Fix position to the viewport */
+            bottom: 0; /* Align to the bottom */
+            left: 0; /* Align to the left */
+            width: 100%; /* Full width */
+            background-color: rgba(0, 0, 0, 1); /* Opaque background */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+            z-index: 1000; /* Ensure it is above other elements */
         }
 
         #ecu-scan-modal {
-        display: none;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
+        display: none; /* Hide modal by default */
+        justify-content: center; /* Center content horizontally */
+        align-items: center; /* Center content vertically */
+        height: 100%; /* Full height */
         }
         .modal-content {
-        background-color: #fff;
-        padding: 40px; /* Mehr Padding für den Ladekreis */
-        border-radius: 5px;
-        width: 300px; /* Fixierte Breite, passend zum Ladekreis */
-        max-width: 80%; /* Für Responsive Design */
-        text-align: center;
+        background-color: #fff; /* White background color */
+        padding: 40px; /* Add padding */
+        border-radius: 5px; /* Rounded corners */
+        width: 300px; /* Fixed width */
+        max-width: 80%; /* Responsive design */
+        text-align: center; /* Center text */
         }
         .errormodal-content {
-        background-color: #ee8b0988;
-        padding: 40px; /* Mehr Padding für den Ladekreis */
-        border-radius: 5px;
-        width: 300px; /* Fixierte Breite, passend zum Ladekreis */
-        max-width: 80%; /* Für Responsive Design */
-        text-align: center;
+        background-color: #ee8b0988; /* Light red background color */
+        padding: 40px; /* Add padding */
+        border-radius: 5px; /* Rounded corners */
+        width: 300px; /* Fixed width */
+        max-width: 80%; /* Responsive design */
+        text-align: center; /* Center text */
         }
 
         .errormodal-light-content {
-            background-color: #ee8b09cb;
-            padding: 20px;
-            width: 100vw; /* Changed to 100vw to cover the entire viewport width */
-            max-width: 100vw; /* Ensure it doesn't exceed the viewport width */
-            text-align: center;
-            margin: 0; /* Remove any margins */
+            background-color: #ee8b09cb; /* Light orange background color */
+            padding: 20px; /* Add padding */
+            width: 100vw; /* Full viewport width */
+            max-width: 100vw; /* Ensure it doesn't exceed viewport width */
+            text-align: center; /* Center text */
+            margin: 0; /* Remove margins */
         }
 
         .errormodal-wait-content {
-            background-color: #40b628cb;
-            padding: 20px;
-            width: 100vw; /* Changed to 100vw to cover the entire viewport width */
-            max-width: 100vw; /* Ensure it doesn't exceed the viewport width */
-            text-align: center;
-            margin: 0; /* Remove any margins */
+            background-color: #40b628cb; /* Light green background color */
+            padding: 20px; /* Add padding */
+            width: 100vw; /* Full viewport width */
+            max-width: 100vw; /* Ensure it doesn't exceed viewport width */
+            text-align: center; /* Center text */
+            margin: 0; /* Remove margins */
         }
 
         .modal-content h2 {
-            margin-top: 0;
+            margin-top: 0; /* Remove top margin */
         }
         .modal-content button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
+            margin-top: 20px; /* Add margin to the top */
+            padding: 10px 20px; /* Add padding */
+            font-size: 16px; /* Set font size */
+            cursor: pointer; /* Change cursor to pointer */
         }
         .loading-icon {
-        border: 16px solid #f3f3f3; /* Light grey */
-        border-top: 16px solid #3498db; /* Blue */
-        border-radius: 50%;
-        width: 120px;
-        height: 120px;
-        animation: spin 2s linear infinite;
-        margin: 0 auto;
+        border: 16px solid #f3f3f3; /* Light grey border */
+        border-top: 16px solid #3498db; /* Blue border */
+        border-radius: 50%; /* Rounded corners */
+        width: 120px; /* Set width */
+        height: 120px; /* Set height */
+        animation: spin 2s linear infinite; /* Spin animation */
+        margin: 0 auto; /* Center icon */
         }
         /* Das Kreuz oben rechts */
         .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #333;
+            position: absolute; /* Absolute positioning */
+            top: 10px; /* Align to the top */
+            right: 10px; /* Align to the right */
+            font-size: 24px; /* Set font size */
+            font-weight: bold; /* Bold text */
+            cursor: pointer; /* Change cursor to pointer */
+            color: #333; /* Dark text color */
         }
 
         .close-btn:hover {
-            color: #e60000; /* Rote Farbe, wenn man mit der Maus drüber geht */
+            color: #e60000; /* Red color on hover */
         }
         /* Stil für den grünen Haken */
         .success-icon {
-            color: green;
-            font-size: 120px;
-            margin: 0 auto;
+            color: green; /* Green color */
+            font-size: 120px; /* Set font size */
+            margin: 0 auto; /* Center icon */
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); } /* Initial state */
+            100% { transform: rotate(360deg); } /* Final state */
         }
 
         /* JSON Tree Styling */
         .json-tree {
-            margin-top: 20px;
+            margin-top: 20px; /* Add margin to the top */
         }
 
 
     </style>
 </head>
 <body>
-
-    <!-- Left Menu -->
-    <div class="menu">
+    <div class="header">
+        <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
+        <span>StarTrace NextGen</span>
+    </div>
+    <div class="menu" id="menu">
         <ul>
             <li><a href="#" onclick="showContent('home')">Home</a></li>
             <li><a href="#" onclick="showContent('identification')">Identification</a></li>
@@ -429,7 +478,9 @@
 
         });
 
-
+        function toggleMenu() {
+            document.getElementById("menu").classList.toggle("open");
+        }
 
 
     </script>

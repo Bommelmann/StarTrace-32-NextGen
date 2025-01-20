@@ -6,6 +6,7 @@
     <title>Home</title>
     <style>
         .tabs {
+            margin-top: 50px; /* Adjust this value based on the height of your header */
             overflow: hidden;
             background-color: #f1f1f1;
             display: flex;
@@ -17,10 +18,13 @@
             border: none;
             outline: none;
             cursor: pointer;
+            width: 33.33%;
             padding: 14px 16px;
             transition: 0.3s;
             flex-grow: 1; /* Allow tabs to grow and fill the space */
             text-align: center; /* Center text within each tab */
+            position: sticky;
+            top: 55px; /* Adjust this value based on the height of your header */
         }
 
         .tablink:hover {
@@ -29,6 +33,7 @@
 
         .tablink.active {
             background-color: #ccc;
+            width: 33.33%;
         }
 
         .tabcontent {

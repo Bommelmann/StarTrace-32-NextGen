@@ -389,6 +389,7 @@ esp_err_t start_webserver(void)
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.max_uri_handlers = 20;
+    //config.max_open_sockets=1;
     //config.close_fn = on_client_disconnect;
 
     // Starten des HTTP-Servers

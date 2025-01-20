@@ -63,6 +63,10 @@ async function DiagnosticRequest(request) {
         }
         attempts++;
         console.log(`Retrying request (${attempts}/${maxAttempts}) due to failure.`);
+        if(attempts==maxAttempts){
+            showErrorModalLight("Maximale Anzahl an Versuchen erreicht. DiagService: " + request);
+            data.response = "FF";
+        }
     }
 
     // Überprüfen, ob die Antwort "7F [any two digits] 21" enthält

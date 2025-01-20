@@ -192,7 +192,7 @@ void app_main(void)
     xTaskCreatePinnedToCore(handle_uds_request_task, "UDS_handling", 4096, NULL, MAIN_TSK_PRIO, NULL, tskNO_AFFINITY);
 
     //"monitor_task" is used for tracking performance metrics
-    xTaskCreate(monitor_task, "HeapMonitorTask", 2048, NULL, 1, NULL);
+    xTaskCreate(monitor_task, "HeapMonitorTask", 4096, NULL, 1, NULL);
 
     ESP_LOGI(MAIN_TAG, "Tasks started");
     //Actuate LED ###################################

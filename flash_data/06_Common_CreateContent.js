@@ -13,9 +13,6 @@
         tabsContainer.appendChild(newTabButton);
     
         // Add fixed position to the tab buttons
-        tabsContainer.style.position = 'fixed';
-        tabsContainer.style.top = '0';
-        tabsContainer.style.width = 'calc(100% - 250px)'; // Adjust width to fill screen from left menu to right edge
         tabsContainer.style.zIndex = '1000';
     
         // Ensure all buttons are equally wide
@@ -93,7 +90,16 @@
     
         // Create the right cell
         let cellValue = document.createElement("td");
-        cellValue.textContent = childContent.Result;
+        // Insert the payload data together with the unit, if existing
+        const PresentationsKey = Object.keys(childContent.Presentations);
+        if(childContent.Presentations[PresentationsKey[0]].hasOwnProperty("Unit")){
+            if(childContent.Presentations[PresentationsKey[0]].Unit != "year" && childContent.Presentations[PresentationsKey[0]].Unit != "day"){
+                cellValue.textContent = childContent.Result+' ['+childContent.Presentations[PresentationsKey[0]].Unit+']';
+            }
+            
+        }else{
+            cellValue.textContent = childContent.Result;
+        }
         row.appendChild(cellValue);
     
         // Append the row to the table
