@@ -13,42 +13,54 @@ esp_err_t checkonFilename(const char* filename, httpd_req_t *req, struct stat *f
     //If LittleFS is used:
     if (strcmp(((struct file_server_data *)req->user_ctx)->base_path_flash, "/data") == 0) {
         if (strlen(filename) >= ESP_VFS_PATH_MAX) {
+            if (!filename) {
+                ESP_LOGE(TAG, "Filename is too long");
+                size_t err_msg_len = strlen("Filename too long: ") + strlen(filepath) + 1;
+                char *err_msg = (char *)malloc(err_msg_len);
+                if (err_msg) {
+                    snprintf(err_msg, err_msg_len, "Filename too long: %s", filepath);
+                    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, err_msg);
+                    free(err_msg);
+                } else {
+                    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Filename too long");
+                }
+                    return ESP_FAIL;
+            }
 
-        if (!filename) {
-        ESP_LOGE(TAG, "Filename is too long");
-
-        /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Filename too long");
-        return ESP_FAIL;
-        }
         }
     }else if (strcmp(((struct file_server_data *)req->user_ctx)->base_path_sd, "/sdcard") == 0) {
         if (strlen(filename) >= FILE_PATH_MAX_FATFS) {
+            if (!filename) {
+                ESP_LOGE(TAG, "Filename is too long");
+                size_t err_msg_len = strlen("Filename too long: ") + strlen(filepath) + 1;
+                char *err_msg = (char *)malloc(err_msg_len);
+                if (err_msg) {
+                    snprintf(err_msg, err_msg_len, "Filename too long: %s", filepath);
+                    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, err_msg);
+                    free(err_msg);
+                } else {
+                    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Filename too long");
+                }
+                    return ESP_FAIL;
+            }
 
-        if (!filename) {
-        ESP_LOGE(TAG, "Filename is too long");
-
-        /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Filename too long");
-        return ESP_FAIL;
         }
-        }
-    }
-    /* If name has trailing '/', respond with directory contents */
-    if (filename[strlen(filename) - 1] == '/') {
-        //return http_resp_dir_html(req, filepath);
     }
     if (stat(filepath, file_stat) == -1) {
-    //       /* If file not present on SPIFFS check if URI
-    //        * corresponds to one of the hardcoded paths */
-            ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
-            /* Respond with 404 Not Found */
+        ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
+         /* Respond with 404 Not Found and the filename*/
+        size_t err_msg_len = strlen("File does not exist: ") + strlen(filepath) + 1;
+        char *err_msg = (char *)malloc(err_msg_len);
+        if (err_msg) {
+            snprintf(err_msg, err_msg_len, "File does not exist: %s", filepath);
+            httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, err_msg);
+            free(err_msg);
+        } else {
             httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File does not exist");
-    //     return ESP_FAIL;
+        }
+            return ESP_FAIL;
     }
-
     return ESP_OK;
-
 }
 
 esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, struct stat *file_stat){
@@ -74,7 +86,7 @@ esp_err_t readsendFile(const char *filename, char *filepath, httpd_req_t *req, s
         //Actuate LED ###################################
         //#################################################
         led_actuation_order.LED_color=DEFAULT;
-        led_actuation_order.breaktime=20;
+        led_actuation_order.breaktime=10;
         xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
         ESP_LOGD(TAG, "Freier Heap vor read into Scratch Buffer: %d Bytes", (unsigned int) esp_get_free_heap_size());
         /* Read file in chunks into the scratch buffer */

@@ -45,7 +45,39 @@ async function showTab(tab) {
     if (activeTabButton) {
         activeTabButton.className += " active";
     }
+
 }
+
+async function handleTabButtonDropDownClick(DropDownText,parentTabName){
+
+    //Schritt 1: Hole parentTabName
+    let parentTab = document.getElementById(parentTabName);
+    //Schritt 2: alle Elemente innerhalb dieses Tabs holen
+    let parentTabelements = parentTab.querySelectorAll('*');
+    //Schritt 3: Durch die elemente iterieren
+    // Schritt 3: Durchlaufe die Elemente und suche nach dem Text
+    for (let i = 0; i < parentTabelements.length; i++) {
+        parentTabelements[i].classList.remove('highlight');
+        }
+    
+    for (let i = 0; i < parentTabelements.length; i++) {
+        parentTabelements[i].classList.remove('highlight');
+        if (parentTabelements[i].textContent==DropDownText) {
+            // Schritt 4: Markiere das Element, wenn der Text gefunden wird
+            parentTabelements[i].classList.add('highlight');
+            
+            // Schritt 5: Scrolle zum gefundenen Element
+            parentTabelements[i].scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'  // 
+            });
+            break;
+        }
+    }
+}
+
+
+
 
 async function showAllChildren(element) {
     // Stelle sicher, dass das Element existiert
@@ -117,3 +149,16 @@ closeBtnWait.addEventListener('click', function() {
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+
+
+
+
+async function ShowLoadingIcon(ID){
+document.getElementById(ID).style.display = 'block';
+}
+
+async function UnshowLoadingIcon(ID){
+    document.getElementById(ID).style.display = 'none';
+}
+    

@@ -201,3 +201,20 @@ async function decimalToAscii(decimalNumber) {
         .map(byte => (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '')  // Nur druckbare ASCII-Zeichen
         .join('');
 }
+
+/*
+// Click-Event für das Dropdown nur auf Touch-Geräten
+if (window.matchMedia("(hover: none)").matches) {
+    button.addEventListener("click", function(event) {
+    dropdownContent.style.display = dropdownContent.style.display === "block" ? "none" : "block";
+    event.stopPropagation();
+    });
+
+    // Schließen bei Klick außerhalb
+    document.addEventListener("click", function(event) {
+    if (!dropdown.contains(event.target)) {
+        dropdownContent.style.display = "none";
+    }
+    });
+}
+    */

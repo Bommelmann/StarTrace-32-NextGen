@@ -34,6 +34,7 @@ IsoTpLinkContainer *uds_rspns_isotp;
 
         // Receive from handle_uds_request_queue and block task as long nothing is received
         if (xQueueReceive(handle_uds_request_queue, &uds_rqst_rspns_string, portMAX_DELAY) == pdPASS) {
+            ESP_LOGE(UDS_TAG, "Received request in HandleUDSRequest Queue");
             //Actuate LED ###################################
             //#################################################
             led_actuation_order.LED_color=DEFAULT;
@@ -83,7 +84,7 @@ IsoTpLinkContainer *uds_rspns_isotp;
             if (xQueueSend(isotp_send_message_queue, &uds_rqst_isotp, portMAX_DELAY) != pdPASS) {
                 ESP_LOGE(UDS_TAG, "Failed to send message to isoTP_message_queue");
             } else {
-                ESP_LOGD(UDS_TAG, "Message sent to isoTP_message_queue");
+                ESP_LOGE(UDS_TAG, "Message sent to isoTP_message_queue");
             }
             ESP_LOGD("P2_LOG", "CONFIG_P2_CLIENT: %d ms", (int)CONFIG_P2_CLIENT);
             ESP_LOGD("P2_LOG", "P2_CLIENT: %d ticks", (int)P2_CLIENT);
@@ -101,11 +102,12 @@ IsoTpLinkContainer *uds_rspns_isotp;
                 //Set response_pending directly to false, it will be set to true, only in the sections, where the continue statement is used
                 response_pending = false;
                 if (xQueueReceive(handle_uds_request_queue_container, &uds_rspns_isotp, P2_CLIENT) == pdPASS) {
+                    ESP_LOGE(UDS_TAG,"Received ISO-TP message from isotp_processing_task");
                     //ESP_LOGI(UDS_TAG, "Received response from isotp_processing_task");
                     //Print out received data                                   
-                    ESP_LOGD(UDS_TAG, "Received ISO-TP message with length: %04X", uds_rspns_isotp->link.receive_size);
+                    ESP_LOGE(UDS_TAG, "Received ISO-TP message with length: %04X", uds_rspns_isotp->link.receive_size);
                         for (int i = 0; i < uds_rspns_isotp->link.receive_size; i++) {
-                            ESP_LOGD(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
+                            ESP_LOGE(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
                         }
                     //First Check if it is Tester Present
                     if((uds_rspns_isotp->payload_buf[0] == 0x7E)&&(uds_rspns_isotp->payload_buf[1] == 0x00)){
@@ -139,7 +141,7 @@ IsoTpLinkContainer *uds_rspns_isotp;
                                 if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
                                     ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
                                 } else {
-                                    ESP_LOGD(UDS_TAG, "Negative Response: Message sent to handle_uds_response_queue");
+                                    ESP_LOGE(UDS_TAG, "Negative Response: Message sent to handle_uds_response_queue");
                                 }
 
                             }
@@ -155,7 +157,7 @@ IsoTpLinkContainer *uds_rspns_isotp;
                             if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
                                 ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
                             } else {
-                                ESP_LOGD(UDS_TAG, "Positive Response: Message sent to handle_uds_response_queue");
+                                ESP_LOGE(UDS_TAG, "Positive Response: Message sent to handle_uds_response_queue");
                             }
                             
                         }
@@ -182,7 +184,7 @@ IsoTpLinkContainer *uds_rspns_isotp;
                     if (xQueueSend(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY) != pdPASS) {
                         ESP_LOGE(UDS_TAG, "Failed to send message to handle_uds_response_queue");
                     } else {
-                        ESP_LOGD(UDS_TAG, "No Response: Message sent to handle_uds_response_queue");
+                        ESP_LOGE(UDS_TAG, "No Response: Message sent to handle_uds_response_queue");
                     }
                     
                 }        

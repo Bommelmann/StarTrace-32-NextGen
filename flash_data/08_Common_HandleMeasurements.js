@@ -7,8 +7,8 @@ async function HandleMeasurements() {
             await createTabButton('tabs-container-measurement',ECUDiagDescriptions.shortLabel,'measurement');
             //Create a Parent Container for each ECU
             await createContent ('measurement', ECUDiagDescriptions.shortLabel);   
-            // Show the Content of the Identification Tab
-            await showContent('measurement');
+            // Show the Content of the Measurement Tab
+            //await showContent('measurement');
             //If the wait modal is visible, hide it
             const errorModalWait = document.getElementById('error-modal-wait');
             errorModalWait.style.display = 'none'; // Modal schließen
@@ -33,6 +33,10 @@ async function HandleMeasurements() {
                     //Aufgabe 3////////////////////////////////////////////
                     //Diagosedaten Eintragen
                     await createDataEntry(measurement.ServiceName + ' ' + ECUDiagDescriptions.shortLabel, DataType);
+                        //Aufgabe 3.1////////////////////////////////////////////
+                        //Dropdown Menü unterhalb der Tabbuttons erweitern
+                        await createTabButtonDropDown('dropdown-content'+ECUDiagDescriptions.shortLabel+'measurement',DataType.DataName);
+
                     //Diagnosedaten Anzeigen
                     // Check if the tab is currently active
                     const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === (ECUDiagDescriptions.shortLabel);

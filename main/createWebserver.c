@@ -13,18 +13,18 @@ static uint8_t index_uri_counter=0;
 
 esp_err_t uds_request_handler(httpd_req_t *req)
 {
-    ESP_LOGD(TAG,"req->uri: %s", req->uri);  
+    ESP_LOGE(TAG,"req->uri: %s", req->uri);  
     // Länge des Bodys ermitteln
     size_t buf_len = req->content_len;
     if (buf_len == 0) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No JSON body in Request");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No JSON body in Request in UDS Request Handler");
         return ESP_FAIL;
     }
 
     // Speicher für den Body reservieren (+1 für Nullterminator)
     char *buf = malloc(buf_len + 1);
     if (!buf) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Memory allocation failed");
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Memory allocation failed in UDS Request Handler");
         return ESP_FAIL;
     }
 
@@ -32,7 +32,7 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     int ret = httpd_req_recv(req, buf, buf_len);
     if (ret <= 0) {
         free(buf);
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Failed to read request body");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Failed to read request body in UDS Request Handler");
         return ESP_FAIL;
     }
     buf[ret] = '\0';
@@ -45,7 +45,7 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     cJSON *uds_rqst_rspns_json = cJSON_Parse(buf);
     free(buf); // Speicher des Buffers freigeben, da er nicht mehr benötigt wird
     if (!uds_rqst_rspns_json) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON format");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON format in UDS Request Handler");
         return ESP_FAIL;
     }
 
@@ -53,7 +53,7 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     cJSON *uds_rqst_json = cJSON_GetObjectItem(uds_rqst_rspns_json, "request");
     if (!cJSON_IsString(uds_rqst_json)){
         cJSON_Delete(uds_rqst_json);
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing or invalid 'Request' field");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing or invalid 'Request' field in UDS Request Handler");
         return ESP_FAIL;
     }
 
@@ -64,10 +64,10 @@ esp_err_t uds_request_handler(httpd_req_t *req)
     strcpy(uds_rqst_rspns_string.uds_request_string,uds_rqst_json->valuestring);
     ESP_LOGD(TAG, "RequestData in uds_message_string_t: %s", uds_rqst_rspns_string.uds_request_string);
     ESP_LOGD(TAG, "RequestLength in uds_message_string_t: %d", (int)uds_rqst_rspns_string.uds_request_length);
-    ESP_LOGD(TAG, "Sending to handle_uds_request_queue");
+    ESP_LOGE(TAG, "Sending to handle_uds_request_queue");
     xQueueSend(handle_uds_request_queue, &uds_rqst_rspns_string, portMAX_DELAY);
     xQueueReceive(handle_uds_response_queue, &uds_rqst_rspns_string, portMAX_DELAY);
-    ESP_LOGD(TAG, "Received from handle_uds_response_queue");
+    ESP_LOGE(TAG, "Received from handle_uds_response_queue");
     ESP_LOGD(TAG, "ResponseData in uds_message_string_t: %s", uds_rqst_rspns_string.uds_response_string);
     ESP_LOGD(TAG, "ResponseLength in uds_message_string_t: %d", (int)uds_rqst_rspns_string.uds_response_length);
 
@@ -117,9 +117,15 @@ esp_err_t start_download_handler(httpd_req_t *req)
                                                             "/index.html", sizeof(filepathlfs));
 
             //Check if Filename has the correct format and if the file is existing
-            checkonFilename(filename_index, req, &file_stat, filepathlfs);
-            //ReadFiles and send over HTTP
-            readsendFile(filename_index, filepathlfs, req, &file_stat);
+            esp_err_t ret;
+            ret=checkonFilename(filename_index, req, &file_stat, filepathlfs);
+            //Only if it is existing and has the right format, it shall be sent
+            if(ret==ESP_OK){
+              //ReadFiles and send over HTTP
+              readsendFile(filename_index, filepathlfs, req, &file_stat);
+            }else{
+            ESP_LOGE(TAG,"CheckonFilename returned: %d", ret);
+            }
 
        }
         if(index_uri_counter==3){
@@ -234,10 +240,15 @@ esp_err_t start_download_handler(httpd_req_t *req)
             */
 
             //Check if Filename has the correct format and if the file is existing
-            checkonFilename(filename, req, &file_stat, filepathfatfs);
-
-            //ReadFiles and send over HTTP
-            readsendFile(filename, filepathfatfs, req, &file_stat);
+            esp_err_t ret;
+            ret=checkonFilename(filename, req, &file_stat, filepathfatfs);
+            //Only if it is existing and has the right format, it shall be sent
+            if(ret==ESP_OK){
+              //ReadFiles and send over HTTP
+              readsendFile(filename, filepathfatfs, req, &file_stat);
+            }else{
+            ESP_LOGE(TAG,"CheckonFilename returned: %d", ret);
+            }
             free (filename);}
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////                                                        
@@ -249,9 +260,16 @@ esp_err_t start_download_handler(httpd_req_t *req)
                                                          req->uri, sizeof(filepathlfs));
 
         //Check if Filename has the correct format and if the file is existing
-        checkonFilename(filename_data, req, &file_stat, filepathlfs);
-        //ReadFiles and send over HTTP
-        readsendFile(filename_data, filepathlfs, req, &file_stat);
+        esp_err_t ret;
+        ret=checkonFilename(filename_data, req, &file_stat, filepathlfs);
+        //Only if it is existing and has the right format, it shall be sent
+        if(ret==ESP_OK){
+            //ReadFiles and send over HTTP
+            readsendFile(filename_data, filepathlfs, req, &file_stat);
+        }else{
+            ESP_LOGE(TAG,"CheckonFilename returned: %d", ret);
+        }
+
     }
     
     return ESP_OK;

@@ -1,6 +1,7 @@
 async function getDiagDescriptions(){
     // Definiere das Timeout (in Millisekunden)
     const timeout = 3000; // 5 Sekunden
+    let filename;
 
     // Funktion, die ein Timeout zurückgibt
     function timeoutPromise() {
@@ -15,7 +16,7 @@ async function getDiagDescriptions(){
         } else {
             for (const device of globalConfigJSON.ECUs) {
                 if(device.ECUDetected==true){
-                    let filename= await getDiagDescriptionName(device);
+                    filename= await getDiagDescriptionName(device);
                     const link="/sdcard?/DiagDescriptions/"+filename;                
 
                         const response = await Promise.race([
@@ -44,7 +45,7 @@ async function getDiagDescriptions(){
     }catch(error){
         //Fehlerbehandlung   
         console.error('Fehler bei der Anfrage:', error);
-        showErrorModal(error.message);
+        showErrorModal(error.message + " Diagnostic Description: " + filename);
 
     }
 }

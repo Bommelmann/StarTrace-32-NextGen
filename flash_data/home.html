@@ -7,10 +7,15 @@
     <style>
         .tabs {
             margin-top: 50px; /* Adjust this value based on the height of your header */
-            overflow: hidden;
-            background-color: #f1f1f1;
+            background-color: #333;
             display: flex;
             justify-content: space-around; /* Distribute tabs evenly */
+         }
+
+        .dropdown {
+            position: relative;
+            display: flex;
+            flex-grow: 1; /* Allow dropdown to grow and fill the space */
         }
 
         .tablink {
@@ -18,22 +23,22 @@
             border: none;
             outline: none;
             cursor: pointer;
-            width: 33.33%;
             padding: 14px 16px;
             transition: 0.3s;
             flex-grow: 1; /* Allow tabs to grow and fill the space */
             text-align: center; /* Center text within each tab */
-            position: sticky;
-            top: 55px; /* Adjust this value based on the height of your header */
+            font-weight: bold;
+            position: relative;
+            z-index: 999; /* Ensure tabs are above other content */
+            color: white; /* Set text color to white */
         }
 
         .tablink:hover {
-            background-color: #ddd;
+            background-color:#575757;
         }
 
         .tablink.active {
-            background-color: #ccc;
-            width: 33.33%;
+            background-color:#ccc;
         }
 
         .tabcontent {
@@ -48,8 +53,9 @@
 
         /* Table Styling */
         table {
-            width: 100%;
+            width: 100%; /* Ensure the table takes the full width of its container */
             border-collapse: collapse;
+            table-layout: fixed; /* Ensure consistent table layout */
         }
 
         table, th, td {
@@ -59,6 +65,8 @@
         th, td {
             padding: 8px;
             text-align: left;
+            word-wrap: break-word; /* Ensure text content is wrapped */
+            max-width: 1px; /* Set a maximum width for table cells */
         }
 
         tr:nth-child(even) {
@@ -85,6 +93,45 @@
         .tabcontent table td:nth-child(2) {
             width: 50%;
         }
+
+        /* ####################################### */
+        /* ####################################### */
+        /*Content for Dropdown Menus*/
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #2c6594;
+            color: white; /* Ensure text is visible */
+            min-width: 100%; /* Match the width of the parent element */
+            max-height: 100vh; /* Set a maximum height for the dropdown */
+            overflow-y: auto; /* Make the dropdown scrollable */
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 2000; /* Ensure dropdown is above other content */
+            top: 100%; /* Position the dropdown below the parent element */
+            left: 0; /* Align the dropdown with the parent element */
+        }
+
+        .dropdown-content a {
+            color: white; /* Ensure text is visible */
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #55738b;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block; /* Show the dropdown on hover */
+        }
+
+        .highlight {
+            background-color: #2c6594 !important;  /* Hintergrundfarbe für Hervorhebung */
+            color: black !important;  /* Falls Textfarbe sich anpassen muss */
+        }
+
     </style>
 </head>
 <body>
@@ -140,6 +187,9 @@
             console.log("Now on the home page");
 
         }
+
+
+
     </script>
 </body>
 </html>
