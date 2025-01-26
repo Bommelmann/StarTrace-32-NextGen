@@ -10,9 +10,9 @@ async function HandleMeasurements() {
             // Show the Content of the Measurement Tab
             //await showContent('measurement');
             //If the wait modal is visible, hide it
-            const errorModalWait = document.getElementById('error-modal-wait');
+            const errorModalWait = document.getElementById('error-modal-wait-measurement');
             errorModalWait.style.display = 'none'; // Modal schließen
-            // Iterate through the Identifications
+            // Iterate through the Measurements
             for (const measurement of ECUDiagDescriptions.DiagDescriptions.measurements) {
                 // Aufgabe 1////////////////////////////////////////////
                 // Diagnoserequest bauen
@@ -20,11 +20,11 @@ async function HandleMeasurements() {
                 let ComService = measurement.ComService.replace(/\s/g, "");
                 let response = await DiagnosticRequest(Identifier + ComService);
                 // Aufgabe 1.1////////////////////////////////////////////
-                // Identification Überschrift im Tab anzeigen
+                // Measurements Überschrift im Tab anzeigen
                 await createHeading(ECUDiagDescriptions.shortLabel +'measurement', measurement.ServiceName + ' ' + ECUDiagDescriptions.shortLabel);
                 // Aufgabe 2////////////////////////////////////////////
                 // Diagnosedaten Interpretieren
-                // Iteriere durch die einzelnen Datentypen der Identification
+                // Iteriere durch die einzelnen Datentypen der Measurements
                 for (const DataType of measurement.Response.DataTypes) {
                     //Daten interpretieren
                     let Data = await interpretData(response.response, DataType);
@@ -39,7 +39,7 @@ async function HandleMeasurements() {
 
                     //Diagnosedaten Anzeigen
                     // Check if the tab is currently active
-                    const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === (ECUDiagDescriptions.shortLabel);
+                    const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ('Electronic Control Unit: '+ECUDiagDescriptions.shortLabel);
                     // Wenn der Tab aktiv ist, zeige den neuen Inhalt sofort an
                     if (isActiveTab) {
                         let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel+'measurement');

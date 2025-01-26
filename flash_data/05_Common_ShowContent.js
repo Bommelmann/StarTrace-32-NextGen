@@ -2,7 +2,7 @@
 async function showContent(sectionId) {
     //Wenn der erste Tab noch nicht existiert, dann wird ein ErrorModal Wait gezeigt
     if (document.querySelector(`#${sectionId} .tablink`) === null) {
-        showErrorModalWait('No data available yet. Please wait for ' + sectionId + ' data to load.');
+        showErrorModalWait('No data available yet. Please wait for ' + sectionId + ' data to load.', sectionId);
     }else{
         const sections = document.querySelectorAll('.content-section');
         //Andere Contents verstecken
@@ -124,9 +124,9 @@ function showErrorModalLight(error) {
 }
 
 // Funktion zum Anzeigen des Wait Modals
-function showErrorModalWait(message) {
-    const errorModalWait = document.getElementById('error-modal-wait');
-    const errorTextWait = document.getElementById('error-text-wait');
+function showErrorModalWait(message,sectionId) {
+    const errorModalWait = document.getElementById(`error-modal-wait-${sectionId}`);
+    const errorTextWait = document.getElementById(`error-text-wait-${sectionId}`);
     errorTextWait.innerText = message;
     errorModalWait.style.display = 'flex'; // Modal wird sichtbar
 }
@@ -139,9 +139,23 @@ closeBtnLight.addEventListener('click', function() {
 });
 
 // Event listener for closing the wait modal
-const closeBtnWait = document.getElementById('close-btn-wait');
+const closeBtnWaitidentification = document.getElementById('close-btn-wait-identification');
+closeBtnWaitidentification.addEventListener('click', function() {
+    const errorModalWait = document.getElementById('error-modal-wait-identification');
+    errorModalWait.style.display = 'none'; // Modal schließen
+});
+
+// Event listener for closing the wait modal
+const closeBtnWaitmeasurement= document.getElementById('close-btn-wait-measurement');
+closeBtnWaitmeasurement.addEventListener('click', function() {
+    const errorModalWait = document.getElementById('error-modal-wait-measurement');
+    errorModalWait.style.display = 'none'; // Modal schließen
+});
+
+// Event listener for closing the wait modal
+const closeBtnWait = document.getElementById('close-btn-wait-faultcodes');
 closeBtnWait.addEventListener('click', function() {
-    const errorModalWait = document.getElementById('error-modal-wait');
+    const errorModalWait = document.getElementById('error-modal-wait-faultcodes');
     errorModalWait.style.display = 'none'; // Modal schließen
 });
 

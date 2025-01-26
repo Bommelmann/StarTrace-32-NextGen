@@ -45,6 +45,7 @@ async function createTabButtonDropDown(DropDownContentParentName, DropDown){
     const a = document.createElement("a");
     // Textcontent ist Datentypname
     a.textContent = DropDown;
+    a.style.fontSize = '12px'; // Reduce font size
     // href ist eigentlich eine URL, wird aber hier nicht benötigt
     a.href = "#";
     a.addEventListener("click", function(event) {
@@ -84,7 +85,7 @@ async function createHeading(parentContentName, headingcontentName){
     headingContent.className = 'tabcontent';
     headingContent.innerHTML = `
     <div id=${headingcontentName} class="tabcontent">
-        <h1>${headingcontentName}</h1>
+        <h3 style="padding: 5px 0; margin: 0;">${headingcontentName}</h3>
     `;
     //Dem übergebenen tabName the TabContent anhängen
     content.appendChild(headingContent);
@@ -110,6 +111,8 @@ async function createDataEntry(parentContentName, childContent){
 
     // Create a new row
     let row = document.createElement("tr");
+    row.style.fontSize = '12px'; // Reduce font size
+    row.style.height = '20px'; // Reduce row height
 
     // Create the left cell with bold text
     let cellKey = document.createElement("td");
@@ -129,6 +132,47 @@ async function createDataEntry(parentContentName, childContent){
     }else{
         cellValue.textContent = childContent.Result;
     }
+    row.appendChild(cellValue);
+
+    // Append the row to the table
+    table.appendChild(row);
+}
+
+async function createDataEntryFaultCodes(parentContentName, childContent){
+    // Get Parent Container
+    const content = document.getElementById(parentContentName);
+    if (!content) {
+        console.error(`Fehler: Content mit ID ${parentContentName} nicht gefunden`);
+        return;
+    }
+
+    // Check if table exists, if not create one
+    let table = content.querySelector('table');
+    if (!table) {
+        table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.tableLayout = 'fixed'; // Ensure consistent table layout
+        content.appendChild(table);
+    }
+
+    // Create a new row
+    let row = document.createElement("tr");
+    row.style.fontSize = '12px'; // Reduce font size
+    row.style.height = '20px'; // Reduce row height
+
+    // Create the left cell with bold text
+    let cellKey = document.createElement("td");
+    let leftCellContent=Object.keys(childContent)[0];
+    leftCellContent = leftCellContent.replace("ENV_", "").replace(/_/g, " ");
+    cellKey.textContent = leftCellContent;
+    cellKey.style.fontWeight = 'bold';
+    row.appendChild(cellKey);
+
+    // Create the right cell
+    let cellValue = document.createElement("td");
+    
+    cellValue.textContent = childContent[Object.keys(childContent)[0]];
+    
     row.appendChild(cellValue);
 
     // Append the row to the table

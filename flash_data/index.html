@@ -13,6 +13,7 @@
     <script src="06_Common_CreateContent.js" defer></script>
     <script src="07_Common_HandleIdentifications.js" defer></script>
     <script src="08_Common_HandleMeasurements.js" defer></script>
+    <script src="09_Common_HandleFaultCodes.js" defer></script>
     <script src="09_Common_InterpretData.js" defer></script>
     <script src="99_Trash.js" defer></script>
     <style>
@@ -293,7 +294,7 @@
             <li><a href="#" onclick="showContent('home')">Home <div class="loader" id="loader-home"></div></a></li>
             <li><a href="#" onclick="showContent('identification')">Identification <div class="loader" id="loader-identification"></div></a></li>
             <li><a href="#" onclick="showContent('measurement')">Measurement <div class="loader" id="loader-measurement"></div></a></li>
-            <li><a href="#" onclick="showContent('fault-codes')">Fault Codes <div class="loader" id="loader-fault-codes"></div></a></li>
+            <li><a href="#" onclick="showContent('faultcodes')">Fault Codes <div class="loader" id="loader-faultcodes"></div></a></li>
             <li><a href="#" onclick="showContent('set-up')">Set Up <div class="loader" id="loader-set-up"></div></a></li>
         </ul>
     </div>
@@ -313,15 +314,19 @@
             <div class="tabs" id="tabs-container-measurement">
             </div>
         </div>
-        <div id="fault-codes" class="content-section hidden">
-            <h1>Fault Codes</h1>
-            <p>Here you can view fault codes.</p>
+        <div id="faultcodes" class="content-section hidden">
+            <div class="tabs" id="tabs-container-faultcodes">
+            </div>
         </div>
         <div id="set-up" class="content-section hidden">
             <h1>Set Up</h1>
             <p>Settings and configuration options Baby.</p>
         </div>
     </div>
+
+<!-- ///////////////////////////////////////////////////////////////////////////////////////////// -->
+<!-- /////////////////////////////// -->
+<!--Modals-->
 
     <!-- Disclaimer Modal -->
     <div id="disclaimer-modal" class="modal">
@@ -340,7 +345,8 @@
             <div id="ecu-scan-icon" class="loading-icon"></div>
         </div>
     </div>
-
+<!-- /////////////////////////////// -->
+<!-- Error Modals -->
     <!-- Modal für Fehlernachricht -->
     <div id="error-modal" class="errormodal">
         <div class="errormodal-content">
@@ -366,14 +372,31 @@
         </div>
     </div>
 
-
+<!-- /////////////////////////////// -->
+<!-- Error Modal Wait -->
 <footer>
-    <!-- Error Modal Wait -->
-    <div id="error-modal-wait" class="errormodal-wait">
+        <!-- Error Modal Wait -->
+        <div id="error-modal-wait-identification" class="errormodal-wait">
         <div class="errormodal-wait-content">
-            <span id="close-btn-wait" class="close-btn">&times;</span> <!-- Kreuz hinzufügen -->
+            <span id="close-btn-wait-identification" class="close-btn">&times;</span> <!-- Kreuz hinzufügen -->
             <h2>Please wait a little longer.</h2>
-            <p id="error-text-wait"></p>
+            <p id="error-text-wait-identification"></p>
+        </div>
+    </div>
+       <!-- Error Modal Wait -->
+    <div id="error-modal-wait-measurement" class="errormodal-wait">
+        <div class="errormodal-wait-content">
+            <span id="close-btn-wait-measurement" class="close-btn">&times;</span> <!-- Kreuz hinzufügen -->
+            <h2>Please wait a little longer.</h2>
+            <p id="error-text-wait-measurement"></p>
+        </div>
+    </div>
+       <!-- Error Modal Wait -->
+    <div id="error-modal-wait-faultcodes" class="errormodal-wait">
+        <div class="errormodal-wait-content">
+            <span id="close-btn-wait-faultcodes" class="close-btn">&times;</span> <!-- Kreuz hinzufügen -->
+            <h2>Please wait a little longer.</h2>
+            <p id="error-text-wait-faultcodes"></p>
         </div>
     </div>
 </footer>
@@ -462,6 +485,13 @@
             await populateTableCANConfig();
             await populateTableWifi();
             await UnshowLoadingIcon('loader-home');
+
+            //################################################
+            //Load FaultCode content and display it #############################
+            //////////////////////////////////////////////////
+            await ShowLoadingIcon('loader-faultcodes');
+            await HandleFaultCodes();
+            await UnshowLoadingIcon('loader-faultcodes');
             //################################################
             //Load Identification content and display it #############################
             //////////////////////////////////////////////////
@@ -474,7 +504,6 @@
             await ShowLoadingIcon('loader-measurement');
             await HandleMeasurements();
             await UnshowLoadingIcon('loader-measurement');
-
 
 
 

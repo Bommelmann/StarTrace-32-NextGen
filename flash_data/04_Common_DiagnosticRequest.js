@@ -55,7 +55,8 @@ async function DiagnosticRequest(request) {
         } catch (error) {
             // Fehlerbehandlung
             console.error('Fehler bei der Anfrage:', error);
-            showErrorModalLight(error.message + ". DiagService: " + request);
+            //showErrorModalLight(error.message + ". DiagService: " + request);
+            showErrorModalLight("Lost vehicle connection! Is the Voltage Supply on?");
 
             const artificialresponseData = {
                 "request": request,

@@ -160,7 +160,17 @@ IsoTpLinkContainer *uds_rspns_isotp;
                                 ESP_LOGE(UDS_TAG, "Positive Response: Message sent to handle_uds_response_queue");
                             }
                             
+                        }else{
+                            ESP_LOGI(UDS_TAG, "Same ID, but different payload: Waiting for actual response");
+                            //Jetzt zurück zu xQueueReceive
+                            response_pending = true;
+                            continue;
                         }
+                    }else{
+                        ESP_LOGI(UDS_TAG, "Different ID: Waiting for actual response");
+                        //Jetzt zurück zu xQueueReceive
+                        response_pending = true;
+                        continue;
                     }        
 
                 }
@@ -200,11 +210,24 @@ IsoTpLinkContainer *uds_rspns_isotp;
 
 // Vergleichsfunktion
 bool compare_buffers(const send_message_can_t *request, const IsoTpLinkContainer *response) {
+    /////////////////////
+    //Achtung: Sonderfall
+    //Wenn der Service ReadDTCExtendedDataRecord (0x19 06) ist, dann wird das letzte Byte nicht verglichen
+    //Das sollte eigentlich "DTCExtDataRecordNumber" des Requests beinhalten, tut es aber nicht immer aufgrund falscher Implementierung in der ECU
     // Iteriere durch die Bytes bis zur angegebenen Länge
-    for (size_t i = 1; i < request->msg_length; i++) {
-        if (request->buffer[i] != response->payload_buf[i]) {
-            return false; // Unterschied gefunden
+    if(((request->buffer[0]==0x19)&&(request->buffer[1]==0x06))||((request->buffer[0]==0x19)&&(request->buffer[1]==0x02))){
+        for (size_t i = 1; i < (request->msg_length-1); i++) {
+            if (request->buffer[i] != response->payload_buf[i]) {
+                return false; // Unterschied gefunden
+            }
+        }   
+    }else{
+        for (size_t i = 1; i < request->msg_length; i++) {
+            if (request->buffer[i] != response->payload_buf[i]) {
+                return false; // Unterschied gefunden
+            }
         }
     }
+    
     return true; // Alle verglichenen Bytes sind gleich
 }

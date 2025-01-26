@@ -434,6 +434,7 @@ esp_err_t start_webserver(void)
         { .uri = "/06_Common_CreateContent.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/07_Common_HandleIdentifications.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/08_Common_HandleMeasurements.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
+        { .uri = "/09_Common_HandleFaultCodes.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/09_Common_InterpretData.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/favicon.ico", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/99_Trash.js", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },

@@ -1,4 +1,6 @@
 async function HandleIdentifications() {
+    //Variable, mit der der erste Tab nur 1 Mal am Anfang gezeigt wird.
+    let isContentShown=false;
     // First Check if the Diagnostic Descriptions are available
     // If not, show Error Modal
     if (globalDiagDescriptions.diagnostics.length > 0) {
@@ -8,9 +10,13 @@ async function HandleIdentifications() {
             //Create a Parent Container for each ECU
             await createContent ('identification', ECUDiagDescriptions.shortLabel);   
             // Show the Content of the Identification Tab
-            await showContent('identification');
+                //Because this function always shows the first tab, we only want to call it once
+                if (isContentShown==false){
+                    await showContent('identification');
+                    isContentShown=true;
+                }
             //If the wait modal is visible, hide it
-            const errorModalWait = document.getElementById('error-modal-wait');
+            const errorModalWait = document.getElementById('error-modal-wait-identification');
             errorModalWait.style.display = 'none'; // Modal schließen
             // Iterate through the Identifications
             for (const Identification of ECUDiagDescriptions.DiagDescriptions.identifications) {
@@ -43,7 +49,7 @@ async function HandleIdentifications() {
                         await createTabButtonDropDown('dropdown-content'+ECUDiagDescriptions.shortLabel+'identification',DataType.DataName);
                     //Diagnosedaten Anzeigen
                     // Check if the tab is currently active
-                    const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === (ECUDiagDescriptions.shortLabel);
+                    const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ('Electronic Control Unit: '+ECUDiagDescriptions.shortLabel);
                     // Wenn der Tab aktiv ist, zeige den neuen Inhalt sofort an
                     if (isActiveTab) {
                         let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel+'identification');
