@@ -94,6 +94,24 @@ async function HandleFaultCodes() {
                         }
                     }
                     let ExtendedDataObject= await interpretDTCData(response.response,ResponseDataType,DTC,ECUDiagDescriptions.shortLabel);
+                        await createHeading(ECUDiagDescriptions.shortLabel +'faultcodes', Object.keys(ExtendedDataObject)[0]);
+                        await createTabButtonDropDown('dropdown-content'+ECUDiagDescriptions.shortLabel+'faultcodes',Object.keys(ExtendedDataObject)[0]);
+                        let isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ('Electronic Control Unit: '+ECUDiagDescriptions.shortLabel);
+                        // Wenn der Tab aktiv ist, zeige den neuen Inhalt sofort an
+                        if (isActiveTab) {
+                            let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel+'faultcodes');
+                            await showAllChildren(tmptab);
+                        }               
+                        for (let ExtendedDataElementElement of ExtendedDataObject[Object.keys(ExtendedDataObject)[0]]["Environment Data"]){
+                            await createDataEntryFaultCodes(Object.keys(ExtendedDataObject)[0],ExtendedDataElementElement);
+                            isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ('Electronic Control Unit: '+ECUDiagDescriptions.shortLabel);
+                            // Wenn der Tab aktiv ist, zeige den neuen Inhalt sofort an
+                            if (isActiveTab) {
+                                let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel+'faultcodes');
+                                await showAllChildren(tmptab);
+                            }
+                        }
+                    
                     //In Diagnosedatenbank schreiben
                     // Stellen Sie sicher, dass ResponseDataType.Result ein Array ist
                     if (!Array.isArray(ResponseDataType.Result)) {
@@ -103,41 +121,7 @@ async function HandleFaultCodes() {
                     ResponseDataType.Result.push(ExtendedDataObject);
                 }
             }
-            }
-            // Aufgabe 3////////////////////////////////////////////
-            //Diagnosedaten Anzeigen
-            // Aufgabe 3.1 ////////////////////////////////////////////
-            //Durch Array iterieren und für jeden DTC die Diagnosedaten anzeigen
-            for (faultmemoryservice of ECUDiagDescriptions.DiagDescriptions.faultmemory.services){
-                if (faultmemoryservice.ServiceName=="ReadDTCExtendedDataRecord"){
-                    for (let DataType of faultmemoryservice.Response.DataTypes){
-                        if(DataType.DataName=="Extended Data Record"){
-                            let ExtendedDataArray=DataType.Result;
-                            for (let ExtendedDataElement of ExtendedDataArray){
-                                await createHeading(ECUDiagDescriptions.shortLabel +'faultcodes', Object.keys(ExtendedDataElement)[0]);
-                                await createTabButtonDropDown('dropdown-content'+ECUDiagDescriptions.shortLabel+'faultcodes',Object.keys(ExtendedDataElement)[0]);
-                                let isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ('Electronic Control Unit: '+ECUDiagDescriptions.shortLabel);
-                                // Wenn der Tab aktiv ist, zeige den neuen Inhalt sofort an
-                                if (isActiveTab) {
-                                    let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel+'faultcodes');
-                                    await showAllChildren(tmptab);
-                                }               
-                                for (let ExtendedDataElementElement of ExtendedDataElement[Object.keys(ExtendedDataElement)[0]]["Environment Data"]){
-                                    await createDataEntryFaultCodes(Object.keys(ExtendedDataElement)[0],ExtendedDataElementElement);
-                                    isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ('Electronic Control Unit: '+ECUDiagDescriptions.shortLabel);
-                                    // Wenn der Tab aktiv ist, zeige den neuen Inhalt sofort an
-                                    if (isActiveTab) {
-                                        let tmptab = document.getElementById(ECUDiagDescriptions.shortLabel+'faultcodes');
-                                        await showAllChildren(tmptab);
-                                    }
-                                }
-                            }                        
-                        }
-                    }
-                }
-            }
-
-            
+            }          
             
             
         }

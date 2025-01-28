@@ -12,6 +12,11 @@
 #include "errno.h"
 #include "messages.h"
 #include "queues.h"
+#include <stdio.h>
+#include "esp_log.h"
+#include "cJSON.h"
+
+#define FILEPATH "/data/config.json"
 
 extern led_actuation_t led_actuation_order;
 
@@ -22,6 +27,8 @@ bool findFile(const char *ECUName, const char *DiagVersion, char *filepath, char
 int extract_hex_value_from_filename(const char *filename);
 int extract_hex_value_from_DiagVers(const char *DiagVersion);
 bool hasNTerminator(const char *str, size_t length);
+char* getConfigData(const char *jsonKey, const char *upperjsonKey);
+cJSON *get_json_value(cJSON *json, const char *jsonKey, const char *upperjsonKey);
 #define FILE_PATH_MAX_LFS (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 #define FILE_PATH_MAX_FATFS  CONFIG_FATFS_MAX_LFN
 #define FILE_PATH_MAX 256

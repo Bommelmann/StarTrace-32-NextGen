@@ -83,13 +83,45 @@ async function createHeading(parentContentName, headingcontentName){
     const headingContent = document.createElement('div');
     headingContent.id = headingcontentName;
     headingContent.className = 'tabcontent';
-    headingContent.innerHTML = `
-    <div id=${headingcontentName} class="tabcontent">
-        <h3 style="padding: 5px 0; margin: 0;">${headingcontentName}</h3>
-    `;
+
+    // Create a container for the heading and button
+    const headingContainer = document.createElement('div');
+    headingContainer.style.display = 'flex';
+    headingContainer.style.alignItems = 'center';
+    headingContainer.style.justifyContent = 'space-between';
+
+    // Create the heading element
+    const headingElement = document.createElement('h3');
+    headingElement.style.padding = '5px 0';
+    headingElement.style.margin = '0';
+    headingElement.style.display = 'inline';
+    headingElement.textContent = headingcontentName;
+
+    // Create a button to toggle visibility
+    const toggleButton = document.createElement('button');
+    toggleButton.textContent = '+';
+    toggleButton.style.marginLeft = '10px';
+    toggleButton.onclick = function() {
+        const elements = headingContent.querySelectorAll('.collapsible');
+        elements.forEach(element => {
+            if (element.style.display === 'none') {
+                element.style.display = 'table-row';
+                toggleButton.textContent = '-';
+            } else {
+                element.style.display = 'none';
+                toggleButton.textContent = '+';
+            }
+        });
+    };
+
+    // Append the heading and button to the container
+    headingContainer.appendChild(headingElement);
+    headingContainer.appendChild(toggleButton);
+
+    // Append the container to the heading content
+    headingContent.appendChild(headingContainer);
     //Dem übergebenen tabName the TabContent anhängen
     content.appendChild(headingContent);
-
 }
 
 async function createDataEntry(parentContentName, childContent){
@@ -113,6 +145,8 @@ async function createDataEntry(parentContentName, childContent){
     let row = document.createElement("tr");
     row.style.fontSize = '12px'; // Reduce font size
     row.style.height = '20px'; // Reduce row height
+    row.className = 'collapsible'; // Add collapsible class
+    row.style.display = 'none'; // Hide by default
 
     // Create the left cell with bold text
     let cellKey = document.createElement("td");
@@ -159,6 +193,8 @@ async function createDataEntryFaultCodes(parentContentName, childContent){
     let row = document.createElement("tr");
     row.style.fontSize = '12px'; // Reduce font size
     row.style.height = '20px'; // Reduce row height
+    row.className = 'collapsible'; // Add collapsible class
+    row.style.display = 'none'; // Hide by default
 
     // Create the left cell with bold text
     let cellKey = document.createElement("td");

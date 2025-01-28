@@ -1,5 +1,3 @@
-
-
 #include "esp_err.h"
 #include "esp_log.h"
 #include "driver/twai.h"
@@ -49,7 +47,10 @@ httpd_handle_t server = NULL;
 
 led_actuation_t led_actuation_order;
 
-
+//CAN Configuration
+char * tx_pin;
+char * rx_pin;
+twai_general_config_t g_config;
 /*
 static esp_err_t stop_webserver(httpd_handle_t server)
 {
@@ -83,6 +84,62 @@ static void connect_handler(void* arg, esp_event_base_t event_base,
 
 
 */
+
+// Function to configure TWAI
+esp_err_t configure_twai(void) {
+    // Pin Configuration
+    char *tx_pin_str = getConfigData("tx_pin", "CAN_Bus");
+    char *rx_pin_str = getConfigData("rx_pin", "CAN_Bus");
+    if (tx_pin_str == NULL || rx_pin_str == NULL) {
+        ESP_LOGE(TAG, "Failed to get configuration data for tx_pin or rx_pin");
+        return ESP_FAIL;
+    }
+    // Convert string values to integers
+    int tx_pin = atoi(tx_pin_str);
+    int rx_pin = atoi(rx_pin_str);
+    // Free the allocated strings
+    free(tx_pin_str);
+    free(rx_pin_str);
+    // Initialize TWAI configuration
+    twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT_V2(0, tx_pin, rx_pin, TWAI_MODE_NORMAL);
+
+    // Baudrate Configuration
+    char *baudrate = getConfigData("baudrate", "CAN_Bus");
+    if (baudrate == NULL) {
+        ESP_LOGE(TAG, "Failed to get configuration data for baudrate");
+        return ESP_FAIL;
+    }
+    // Convert string values to integers
+    int baudrate_int = atoi(baudrate);
+    // Free the allocated strings
+    free(baudrate);
+
+    // Initialize TWAI timing configuration
+   
+    if(baudrate_int==125000){
+            twai_timing_config_t t_config = TWAI_TIMING_CONFIG_125KBITS();
+            ESP_ERROR_CHECK(twai_driver_install(&g_config, &t_config, &f_config));
+    }else if(baudrate_int==250000){
+            twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();
+            ESP_ERROR_CHECK(twai_driver_install(&g_config, &t_config, &f_config));
+    }else if(baudrate_int==500000){
+            twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
+            ESP_ERROR_CHECK(twai_driver_install(&g_config, &t_config, &f_config));
+            }
+    else if(baudrate_int==1000000){
+            twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS();
+            ESP_ERROR_CHECK(twai_driver_install(&g_config, &t_config, &f_config));
+    }else{
+        ESP_LOGE(TAG, "Invalid baudrate configuration");
+        return ESP_FAIL;}
+
+    
+    ESP_LOGI(MAIN_TAG, "CAN/TWAI Driver installed");
+    ESP_ERROR_CHECK(twai_start());
+    ESP_LOGI(MAIN_TAG, "CAN/TWAI Driver started");
+
+    return ESP_OK;
+}
 
 void app_main(void)
 {
@@ -136,12 +193,8 @@ void app_main(void)
         //items of the data type IsoTpLinkContainer
         // between the tasks "isotp_processing_task" and "handle_uds_request_task"
     handle_uds_request_queue_container = xQueueCreate(10, sizeof(IsoTpLinkContainer*));
- 
-
     //websocket_send_queue = xQueueCreate(128, sizeof(send_message_can_t));
 
-
-    
 
     //Create Semaphores ###################################
     //#################################################
@@ -161,10 +214,7 @@ void app_main(void)
     xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     //Init TWAI ###################################
     //#################################################
-    ESP_ERROR_CHECK(twai_driver_install(&g_config, &t_config, &f_config));
-    ESP_LOGI(MAIN_TAG, "CAN/TWAI Driver installed");
-    ESP_ERROR_CHECK(twai_start());
-    ESP_LOGI(MAIN_TAG, "CAN/TWAI Driver started");
+    configure_twai();
     // ISO-TP handler + tasks
     configure_isotp_links();
     ESP_LOGI(MAIN_TAG, "ISO-TP links configured");

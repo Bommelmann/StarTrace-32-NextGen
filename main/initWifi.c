@@ -1,8 +1,8 @@
 #include "initWifi.h"
 
 /* STA Configuration */
-#define EXAMPLE_ESP_WIFI_STA_SSID           CONFIG_ESP_WIFI_REMOTE_AP_SSID
-#define EXAMPLE_ESP_WIFI_STA_PASSWD         CONFIG_ESP_WIFI_REMOTE_AP_PASSWORD
+//#define EXAMPLE_ESP_WIFI_STA_SSID           CONFIG_ESP_WIFI_REMOTE_AP_SSID
+//#define EXAMPLE_ESP_WIFI_STA_PASSWD         CONFIG_ESP_WIFI_REMOTE_AP_PASSWORD
 #define EXAMPLE_ESP_MAXIMUM_RETRY           CONFIG_ESP_MAXIMUM_STA_RETRY
 
 #if CONFIG_ESP_WIFI_AUTH_OPEN
@@ -38,6 +38,9 @@
 
 static const char *TAG_STA = "initWifi.c: STA";
 static const char *TAG_AP = "initWifi.c: AP";
+
+char *SSID;
+char *password;
 
 static int s_retry_num = 0;
 
@@ -202,27 +205,41 @@ esp_netif_t *wifi_init_softap(void)
 /* Initialize wifi station */
 esp_netif_t *wifi_init_sta(void)
 {
+    SSID=getConfigData("SSID", "WIFI");
+    password=getConfigData("password", "WIFI");
+
+    // Ensure SSID and password are not null
+    if (SSID == NULL || password == NULL) {
+        ESP_LOGE(TAG_STA, "SSID or password is null");
+        return NULL;
+    }
+    ESP_LOGI(TAG_STA,"SSID from Config.json: %s", SSID);
+    ESP_LOGI(TAG_STA,"SSID from Config.json: %s", password);
+
     esp_netif_t *esp_netif_sta = esp_netif_create_default_wifi_sta();
 
     wifi_config_t wifi_sta_config = {
         .sta = {
-            .ssid = EXAMPLE_ESP_WIFI_STA_SSID,
-            .password = EXAMPLE_ESP_WIFI_STA_PASSWD,
-            .scan_method = WIFI_ALL_CHANNEL_SCAN,
-            .failure_retry_cnt = EXAMPLE_ESP_MAXIMUM_RETRY,
-            /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (password len => 8).
-             * If you want to connect the device to deprecated WEP/WPA networks, Please set the threshold value
-             * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
-            * WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
-             */
+            // Initialize SSID and password correctly
+            .ssid = "",
+            .password = "",
             .threshold.authmode = ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD,
-            .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+            .pmf_cfg = {
+                .capable = true,
+                .required = false
+            },
         },
     };
+
+    // Copy SSID and password to the config structure
+    strncpy((char *)wifi_sta_config.sta.ssid, SSID, sizeof(wifi_sta_config.sta.ssid) - 1);
+    strncpy((char *)wifi_sta_config.sta.password, password, sizeof(wifi_sta_config.sta.password) - 1);
 
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config) );
 
     ESP_LOGD(TAG_STA, "wifi_init_sta finished.");
+
+
 
     return esp_netif_sta;
 }
@@ -307,10 +324,10 @@ void InitWifi(void){
     xQueueSend(handle_led_actuation_queue, &led_actuation_order, portMAX_DELAY);
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG_STA, "connected to ap SSID:%s password:%s",
-                 EXAMPLE_ESP_WIFI_STA_SSID, EXAMPLE_ESP_WIFI_STA_PASSWD);
+                 SSID, password);
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG_STA, "Failed to connect to SSID:%s, password:%s",
-                 EXAMPLE_ESP_WIFI_STA_SSID, EXAMPLE_ESP_WIFI_STA_PASSWD);
+                 SSID, password);
     } else {
         ESP_LOGE(TAG_STA, "UNEXPECTED EVENT");
         return;
@@ -325,4 +342,7 @@ void InitWifi(void){
     }
 
     start_mdns_service();
+        // Free SSID and password after use
+    free(SSID);
+    free(password);
 }

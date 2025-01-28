@@ -1,4 +1,6 @@
 #include "HandleFileReading.h"
+#include "cJSON.h"
+#include "esp_log.h"
 
 #define TAG "HandleFileReading.c"
 
@@ -258,4 +260,80 @@ bool hasNTerminator(const char *str, size_t length) {
     }
     ESP_LOGI(TAG, "No NULL terminator found");
     return false;
+}
+
+
+
+char* getConfigData(const char *jsonKey, const char *upperjsonKey) {
+    FILE *fd = fopen(FILEPATH, "r");
+    if (!fd) {
+        ESP_LOGE(TAG, "Failed to read existing file : %s", FILEPATH);
+        return NULL;
+    }
+    
+    fseek(fd, 0, SEEK_END);
+    long fileSize = ftell(fd);
+    rewind(fd);
+    
+    char *buffer = (char *)malloc(fileSize + 1);
+    if (!buffer) {
+        ESP_LOGE(TAG, "Failed to allocate memory for JSON file");
+        fclose(fd);
+        return NULL;
+    }
+    
+    fread(buffer, 1, fileSize, fd);
+    buffer[fileSize] = '\0';
+    fclose(fd);
+    
+    cJSON *json = cJSON_Parse(buffer);
+    free(buffer);
+    if (!json) {
+        ESP_LOGE(TAG, "Failed to parse JSON file");
+        return NULL;
+    }
+    
+    cJSON *jsonValue = get_json_value(json, jsonKey, upperjsonKey);
+    char *result = NULL;
+    
+    if (jsonValue) {
+        if (cJSON_IsString(jsonValue) && (jsonValue->valuestring != NULL)) {
+            result = strdup(jsonValue->valuestring);
+        } else if (cJSON_IsNumber(jsonValue)) {
+            asprintf(&result, "%d", jsonValue->valueint);
+            
+        }
+    }
+    ESP_LOGD(TAG, "Found JSON Value: %s", result);
+    cJSON_Delete(json);
+    return result;
+}
+
+cJSON *get_json_value(cJSON *json, const char *jsonKey, const char *upperjsonKey) {
+    if (json == NULL || jsonKey == NULL) {
+        ESP_LOGE("JSON", "Invalid JSON object or key");
+        return NULL;
+    }
+
+    // Print the key for debugging
+    ESP_LOGD("JSON", "Searching for key: %s", jsonKey);
+
+    // Get the value associated with the key
+    cJSON *UpperObject = cJSON_GetObjectItemCaseSensitive(json, upperjsonKey);
+    if (UpperObject == NULL) {
+        ESP_LOGE("JSON", "Upper Key not found");
+    } else {
+        ESP_LOGD("JSON", "Upper Key found");
+    }
+        // Get the value associated with the key
+    cJSON *jsonValue= cJSON_GetObjectItemCaseSensitive(UpperObject, jsonKey);
+    if (jsonValue == NULL) {
+        ESP_LOGE("JSON", "Lower Key not found");
+    } else {
+        ESP_LOGD("JSON", "Lower Key found");
+    }
+
+
+
+    return jsonValue;
 }

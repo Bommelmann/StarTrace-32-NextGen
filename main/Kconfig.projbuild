@@ -1,21 +1,5 @@
 menu "Startrace Custom Configuration"
 
-    menu "CAN Config"
-    config EXAMPLE_TX_GPIO_NUM
-        int "TX GPIO number"
-        default 43
-        help
-            This option selects the GPIO pin used for the TX signal. Connect the
-            TX signal to your transceiver.
-
-    config EXAMPLE_RX_GPIO_NUM
-        int "RX GPIO number"
-        default 44
-        help
-            This option selects the GPIO pin used for the RX signal. Connect the
-            RX signal to your transceiver.
-    endmenu
-
     menu "DIAG Wifi Config"
             comment "DIAG WIFI Configuration"
     
@@ -48,18 +32,6 @@ menu "Startrace Custom Configuration"
     
     menu "External WIFI Configuration"
         comment "External WIFI Configuration"
-
-        config ESP_WIFI_REMOTE_AP_SSID
-            string "External WIFI SSID"
-            default "TP-LINK_0F38"
-            help
-                SSID (network name) for the example's sta to connect to.
-
-        config ESP_WIFI_REMOTE_AP_PASSWORD
-            string "External WIFI Password"
-            default "84017673"
-            help
-                WiFi password for the example to use.
 
         config ESP_MAXIMUM_STA_RETRY
             int "Maximum retry"

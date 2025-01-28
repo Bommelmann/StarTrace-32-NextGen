@@ -1,7 +1,7 @@
 {
     "WIFI": {
-      "SSID": "",
-      "password": "",
+      "SSID": "TP-LINK_0F38",
+      "password": "84017673",
       "host": "",
       "path": ""
     },
@@ -10,11 +10,22 @@
       "fileFormat": "asc"
     },
     "CAN_Bus": {
-      "rx_pin": 4,
-      "tx_pin": 5,
+      "rx_pin": 44,
+      "tx_pin": 43,
       "baudrate": 250000,
       "testerAddress": 241,
       "ID_length_bit": 29
+    },
+    "UDS": {
+      "P2Client": 3000,
+      "ECU1TXID": 416940273,
+      "ECU1RXID": 417001728,
+      "ECU2TXID": 416940529,
+      "ECU2RXID": 417001729,
+      "ECU3TXID": 416941041,
+      "ECU3RXID": 417001731,
+      "ECU4TXID": 416955889,
+      "ECU4RXID": 417001789
     },
     "ECUs": [
       {

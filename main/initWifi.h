@@ -14,6 +14,7 @@
 #include "queues.h"
 #include "createWebserver.h"
 #include "mdns.h"
+#include "HandleFileReading.h"
 
 extern led_actuation_t led_actuation_order;
 
