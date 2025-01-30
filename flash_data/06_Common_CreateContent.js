@@ -67,12 +67,13 @@ async function createContent(parentcontentName, childcontentName){
     const childContent = document.createElement('div');
     childContent.id = childcontentName+parentcontentName;
     childContent.className = 'tabcontent';
-    //Dem übergebenen tabName the TabContent anhängen
+    childContent.style.border = 'none';
+        //Dem übergebenen tabName the TabContent anhängen
     content.appendChild(childContent);
 
 }
 
-async function createHeading(parentContentName, headingcontentName){
+async function createHeading(parentContentName, headingcontentName) {
     // Get Parent Container
     const content = document.getElementById(parentContentName);
     if (!content) {
@@ -88,7 +89,6 @@ async function createHeading(parentContentName, headingcontentName){
     const headingContainer = document.createElement('div');
     headingContainer.style.display = 'flex';
     headingContainer.style.alignItems = 'center';
-    headingContainer.style.justifyContent = 'space-between';
 
     // Create the heading element
     const headingElement = document.createElement('h3');
@@ -100,7 +100,9 @@ async function createHeading(parentContentName, headingcontentName){
     // Create a button to toggle visibility
     const toggleButton = document.createElement('button');
     toggleButton.textContent = '+';
-    toggleButton.style.marginLeft = '10px';
+    toggleButton.style.marginLeft = '10px'; // Add some space between heading and button
+    toggleButton.style.marginBottom = '1vh';
+    toggleButton.style.marginTop= '1vh';
     toggleButton.onclick = function() {
         const elements = headingContent.querySelectorAll('.collapsible');
         elements.forEach(element => {

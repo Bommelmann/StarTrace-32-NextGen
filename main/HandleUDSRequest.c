@@ -105,9 +105,9 @@ IsoTpLinkContainer *uds_rspns_isotp;
                     ESP_LOGE(UDS_TAG,"Received ISO-TP message from isotp_processing_task");
                     //ESP_LOGI(UDS_TAG, "Received response from isotp_processing_task");
                     //Print out received data                                   
-                    ESP_LOGE(UDS_TAG, "Received ISO-TP message with length: %04X", uds_rspns_isotp->link.receive_size);
+                    ESP_LOGD(UDS_TAG, "Received ISO-TP message with length: %04X", uds_rspns_isotp->link.receive_size);
                         for (int i = 0; i < uds_rspns_isotp->link.receive_size; i++) {
-                            ESP_LOGE(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
+                            ESP_LOGD(UDS_TAG, "payload_buf[%d] = %02x", i, uds_rspns_isotp->payload_buf[i]);
                         }
                     //First Check if it is Tester Present
                     if((uds_rspns_isotp->payload_buf[0] == 0x7E)&&(uds_rspns_isotp->payload_buf[1] == 0x00)){

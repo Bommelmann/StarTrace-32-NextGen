@@ -539,13 +539,6 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 
 #
-# CAN Config
-#
-CONFIG_EXAMPLE_TX_GPIO_NUM=43
-CONFIG_EXAMPLE_RX_GPIO_NUM=44
-# end of CAN Config
-
-#
 # DIAG Wifi Config
 #
 

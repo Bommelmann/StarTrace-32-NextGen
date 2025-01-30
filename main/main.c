@@ -51,6 +51,9 @@ led_actuation_t led_actuation_order;
 char * tx_pin;
 char * rx_pin;
 twai_general_config_t g_config;
+
+//Webserver Configuration
+char ipv4_address[16];
 /*
 static esp_err_t stop_webserver(httpd_handle_t server)
 {

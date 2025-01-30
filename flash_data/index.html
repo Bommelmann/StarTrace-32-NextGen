@@ -4,18 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StarTrace NextGen</title>
-    <script src="00_StartUp_getAssets.js" defer></script>
-    <script src="01_StartUp_ScanECus.js" defer></script>
-    <script src="02_StartUp_getDiagDescriptions.js" defer></script>
-    <script src="03_StartUp_PopulateTables.js" defer></script>
-    <script src="04_Common_DiagnosticRequest.js" defer></script>
-    <script src="05_Common_ShowContent.js" defer></script>
-    <script src="06_Common_CreateContent.js" defer></script>
-    <script src="07_Common_HandleIdentifications.js" defer></script>
-    <script src="08_Common_HandleMeasurements.js" defer></script>
-    <script src="09_Common_HandleFaultCodes.js" defer></script>
-    <script src="09_Common_InterpretData.js" defer></script>
-    <script src="99_Trash.js" defer></script>
     <style>
 
         body {
@@ -81,22 +69,7 @@
             display: none; /* Standardmäßig ausgeblendet */
             top: 22%; /* Vertikal zentrieren */
         }
-        .header {
-            background-color: #2c6594; /* Dark background color */
-            color: white; /* White text color */
-            height: 50px; /* Set header height */
-            line-height: 50px; /* Vertically center content */
-            padding: 0px 10px; /* Add padding */
-            text-align: center; /* Align text to the left */
-            position: fixed; /* Fix position to the viewport */
-            width: 100%; /* Full width */
-            top: 0; /* Align to the top */
-            z-index: 3000; /* Ensure it is above other elements */
-            display: flex; /* Use flexbox for alignment */
-            align-items: center; /* Vertically center items */
-            margin: 0; /* Remove margin */
-            font-weight: bold;
-        }
+ 
         .hamburger {
             font-size: 30px; /* Set font size */
             cursor: pointer; /* Change cursor to pointer */
@@ -131,6 +104,22 @@
                 display: none; /* Hide hamburger on larger screens */
             }
         }
+        @media (max-width: 768px) {
+            .header {
+                font-size: 12px; /* Smaller font size for smaller screens */
+            }
+
+            .headerWifiConfig {
+                font-size: 8px; /* Smaller font size for smaller screens */
+            }
+
+            .variable-text{
+                font-size: 8px; /* Smaller font size for smaller screens */
+            }
+        }
+
+ 
+
         /* JSON Output Styling */
         #json-output {
             margin-top: 20px; /* Add margin to the top */
@@ -281,13 +270,49 @@
         .json-tree {
             margin-top: 20px; /* Add margin to the top */
         }
+        #ipv4-address {
+            line-height: 1.2; /* Kleineren Wert testen */
+        }
+        .variable-text {
+            color: #40b628cb; /* Set the color for the variables */
+            font-weight: bold;
+            display: inline; /* Falls nötig */
+        }
+        .header {
+            background-color: #2c6594; /* Dark background color */
+            color: white; /* White text color */
+            height: 50px; /* Set header height */
+            line-height: 50px; /* Vertically center content */
+            padding: 0px 10px; /* Add padding */
+            text-align: center; /* Align text to the left */
+            position: fixed; /* Fix position to the viewport */
+            width: 100%; /* Full width */
+            top: 0; /* Align to the top */
+            z-index: 3000; /* Ensure it is above other elements */
+            display: flex; /* Use flexbox for alignment */
+            align-items: center; /* Vertically center items */
+            margin: 0; /* Remove margin */
+            font-weight: bold;
+            font-size: 18px; /* Default font size */
+        }
 
+        .headerWifiConfig{
+            margin-left:auto;
+            padding-right: 5vw;
+            padding-left: 2vw;
+            font-weight: normal;
+            border-style: none none none solid;
+            font-size: 16px; /* Default font size */
+            text-align: left;
+            
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
         <span>StarTrace NextGen</span>
+        <span id="ipv4-address" class="headerWifiConfig"></span> <!-- New span for ipv4address -->
     </div>
     <div class="menu" id="menu">
         <ul>
@@ -404,56 +429,109 @@
     <script>
         const closeBtn = document.getElementById('close-btn');
 
-
+        ////////////// /////////////////////////////////
+        //Globale Variables
         let globalConfigJSON = {};
         let globalDiagDescriptions = {};
-
-        // Display disclaimer modal on first load
+        // Variable für Schrittweise laden von Variablen
+        const scripts = [
+            "00_StartUp_getAssets.js",
+            "01_StartUp_ScanECus.js",
+            "02_StartUp_getDiagDescriptions.js",
+            "03_StartUp_PopulateTables.js",
+            "04_Common_DiagnosticRequest.js",
+            "05_Common_ShowContent.js",
+            "06_Common_CreateContent.js",
+            "07_Common_HandleIdentifications.js",
+            "08_Common_HandleMeasurements.js",
+            "09_Common_HandleFaultCodes.js",
+            "09_Common_InterpretData.js",
+            "99_Trash.js"
+        ];
+        
         window.onload = async function() {
             console.log("Script loaded");
-            //################################################
-            //Get initial Assets #############################
-            //////////////////////////////////////////////////
-            //config.json
-            let response=await getAsset('/config.json', 'application/json');
-            // Warten auf das Parsen der JSON-Antwort
-            const data = await response.json(); 
-            // Speichern der erhaltenen Daten in der globalen Variable
-            globalConfigJSON = data;
 
-            /////////////////////////////////////////////
-            //home.html
-            response = await getAsset('/home.html', 'text/html');
-            const homeContent = await response.text();
-            document.getElementById('home').innerHTML = homeContent;
-
-            //################################################
+             //################################################
             //Get HTML Elements #############################
             //////////////////////////////////////////////////
             const { closeBtn, errorModal, disclaimer_modal, disclaimer_continue, scanning_modal, ecuScanTitle, ecuScanIcon} = await getElements();
 
-            //Add Functions to the different Buttons ########
+            //################################################
+            //Show Disclaimer Modal ##########################
             //////////////////////////////////////////////////
             disclaimer_continue.addEventListener('click', async function () {
-            // Disclaimer-Modal schließen
             disclaimer_modal.style.display = 'none';
-            // Scanning-Modal öffnen
             scanning_modal.style.display = 'flex';
             });
-
             closeBtn.addEventListener('click', async function () {
-            // Error-Modal schließen
             errorModal.style.display = 'none';
             });
-
             disclaimer_modal.style.display = 'flex';
-            // Warte, bis der "Accept and Continue"-Button geklickt wird
             await waitForDisclaimer(disclaimer_continue);
-            // Disclaimer-Modal schließen
             disclaimer_modal.style.display = 'none';
-            // Scanning-Modal öffnen
-            scanning_modal.style.display = 'flex';
+            //################################################
+            //Get initial Assets #############################
+            /////////////////////////////////////////////////
+            //Show Loading Modal
+            ecuScanTitle.textContent = 'Loading Scripts...';
+            ecuScanIcon.classList.add('loading-icon');
+            ecuScanIcon.innerHTML = '';
+            scanning_modal.style.display = 'flex';   
+                //Load Scripts
+                for (let script of scripts) {
+                    let response = await getAsset(script, 'text/javascript');
+                    let scriptText = await response.text();
 
+                    // Füge eine sourceURL hinzu, damit Chrome das Skript in den DevTools anzeigt
+                    scriptText += `\n//# sourceURL=${script}`;
+
+                    const scriptElement = document.createElement('script');
+                    scriptElement.text = scriptText;
+                    document.head.appendChild(scriptElement);
+                }
+
+                //config.json
+                response=await getAsset('/config.json', 'application/json');
+                // Warten auf das Parsen der JSON-Antwort
+                const data = await response.json(); 
+                // Speichern der erhaltenen Daten in der globalen Variable
+                globalConfigJSON = data;
+
+                /////////////////////////////////////////////
+                //home.html
+                response = await getAsset('/home.html', 'text/html');
+                const homeContent = await response.text();
+                document.getElementById('home').innerHTML = homeContent;
+
+                /////////////////////////////////////////////
+                //GetIPAddress
+                response= await getAsset('/ipv4address', 'text/html');
+                let ipv4address = await response.text();
+                let ExternalWifiName=globalConfigJSON.WIFI.SSID;
+                if(ipv4address==""){
+                    document.getElementById('ipv4-address').innerHTML = `No connection with <span class="variable-text">${ExternalWifiName}</span> <br> Connect to <span class="variable-text">DIAG_WIFI </span> with <span class="variable-text">192.168.4.1</span>  `; 
+                }else{
+                    document.getElementById('ipv4-address').innerHTML = `Connect to <span class="variable-text">${ExternalWifiName}</span> with <span class="variable-text">${ipv4address}</span> <br> Connect to <span class="variable-text">DIAG_WIFI </span> with <span class="variable-text">192.168.4.1</span>  `;
+                }
+                
+
+
+            //Show Loading Modal Succesfull
+            ecuScanTitle.textContent = 'Scripts Complete!';
+            ecuScanIcon.classList.remove('loading-icon');
+            ecuScanIcon.classList.add('success-icon');
+            ecuScanIcon.innerHTML = ''; // Leer lassen, Haken kommt erst später
+            ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
+            await new Promise(resolve => setTimeout(resolve, 200));
+  
+
+
+
+            ecuScanTitle.textContent = 'Scanning for ECUs...';
+            ecuScanIcon.classList.remove('success-icon');
+            ecuScanIcon.classList.add('loading-icon');
+            ecuScanIcon.innerHTML = '';        
             await ScanECUs();
             ecuScanTitle.textContent = 'ECU Scan Complete!';
             ecuScanIcon.classList.remove('loading-icon');
@@ -461,7 +539,7 @@
             ecuScanIcon.innerHTML = ''; // Leer lassen, Haken kommt erst später
             ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
             // Grüner Haken soll gesehen werden
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 200));
             ecuScanTitle.textContent = 'Loading Databases...';
             ecuScanIcon.classList.remove('success-icon');
             ecuScanIcon.classList.add('loading-icon');
@@ -473,7 +551,7 @@
             ecuScanIcon.classList.remove('loading-icon');
             ecuScanIcon.classList.add('success-icon');
             ecuScanIcon.innerHTML = '&#x2714;'; // Unicode für grünen Haken
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 200));
             scanning_modal.style.display = 'none';
             //################################################
             // Load home content and display it
@@ -544,6 +622,69 @@
         }
         
 
+        //################################################
+        //Functions that are needed before other scripts are loaded
+        //////////////////////////////////////////////////
+        //Common function to get an asset from the server
+        async function getAsset(link, Content_Type){
+
+        // Definiere das Timeout (in Millisekunden)
+        const timeout = 3000; // 5 Sekunden
+
+        // Funktion, die ein Timeout zurückgibt
+        function timeoutPromise() {
+            return new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout beim Abrufen der Daten')), timeout));
+        }
+            //Zuerst prüfen, ob sich ein Objekt namens "globalConfigJSON" im Cache befindet
+            try{
+
+                    const response = await Promise.race([
+                        fetch(link, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': Content_Type
+                            }
+                        }),
+                        timeoutPromise() // Timeout abwarten
+                    ]);
+                
+
+                // Prüfen, ob die Antwort erfolgreich war
+                if (!response.ok) {
+                    throw new Error(`HTTP-Error! Status: ${response.status}` + " Link: " + link);
+                }
+
+                return response;
+                
+                }catch(error){
+                    //Fehlerbehandlung   
+                    console.error('Fehler bei der Anfrage:', error);
+                    showErrorModal(error.message);
+
+                }
+
+        }
+        async function getElements() {
+            return {
+                closeBtn: document.getElementById('close-btn'),
+                errorModal: document.getElementById('error-modal'),
+                disclaimer_modal: document.getElementById('disclaimer-modal'),
+                disclaimer_continue: document.getElementById('disclaimer-continue'),
+                scanning_modal: document.getElementById('ecu-scan-modal'),
+                ecuScanTitle: document.getElementById('ecu-scan-title'),
+                ecuScanIcon: document.getElementById('ecu-scan-icon')
+            };
+    }
+
+    // Funktion, die eine Promise zurückgibt, die aufgelöst wird, wenn der Button geklickt wird
+    function waitForDisclaimer() {
+        return new Promise((resolve) => {
+            const disclaimer_continue = document.getElementById('disclaimer-continue');
+            disclaimer_continue.addEventListener('click', function () {
+                resolve();
+            });
+        });
+    }
     </script>
 
 </body>

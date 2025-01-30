@@ -10,6 +10,13 @@ static bool webserver_restarted=false;
 //counter to prevent, that index.html is sent twice
 static uint8_t index_uri_counter=0;
 
+esp_err_t IPAddress_handler(httpd_req_t *req)
+{
+    extern char ipv4_address[16];
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_sendstr(req, ipv4_address);
+    return ESP_OK;
+}
 
 esp_err_t uds_request_handler(httpd_req_t *req)
 {
@@ -406,7 +413,7 @@ esp_err_t start_webserver(void)
             sizeof(server_data->base_path_sd));
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 20;
+    config.max_uri_handlers = 30; // Increase this value as needed
     //config.max_open_sockets=1;
     //config.close_fn = on_client_disconnect;
 
@@ -441,7 +448,8 @@ esp_err_t start_webserver(void)
         { .uri = "/sdcard", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/", .method = HTTP_GET, .handler = start_download_handler, .user_ctx = server_data },
         { .uri = "/uds_request", .method = HTTP_POST, .handler = uds_request_handler, .user_ctx = NULL },
-        { .uri = "/ws", .method = HTTP_GET, .handler = ws_handler, .user_ctx = NULL, .is_websocket = true }
+        { .uri = "/ws", .method = HTTP_GET, .handler = ws_handler, .user_ctx = NULL, .is_websocket = true },
+        { .uri = "/ipv4address", .method = HTTP_GET, .handler = IPAddress_handler, .user_ctx = NULL}
     };
 
     // URIs registrieren

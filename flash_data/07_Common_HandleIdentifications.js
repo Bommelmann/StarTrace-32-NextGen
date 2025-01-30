@@ -28,6 +28,9 @@ async function HandleIdentifications() {
                 // Aufgabe 1.1////////////////////////////////////////////
                 // Identification Überschrift im Tab anzeigen
                 await createHeading(ECUDiagDescriptions.shortLabel+'identification', Identification.ServiceName + ' ' + ECUDiagDescriptions.shortLabel);
+                //Aufgabe 1.1////////////////////////////////////////////
+                //Dropdown Menü unterhalb der Tabbuttons erweitern
+                await createTabButtonDropDown('dropdown-content'+ECUDiagDescriptions.shortLabel+'identification', Identification.ServiceName + ' ' + ECUDiagDescriptions.shortLabel);
                 // Aufgabe 2////////////////////////////////////////////
                 // Diagnosedaten Interpretieren
                 // Iteriere durch die einzelnen Datentypen der Identification
@@ -44,9 +47,6 @@ async function HandleIdentifications() {
                     //Aufgabe 3////////////////////////////////////////////
                     //Diagosedaten Eintragen
                     await createDataEntry(Identification.ServiceName + ' ' + ECUDiagDescriptions.shortLabel, DataType);
-                        //Aufgabe 3.1////////////////////////////////////////////
-                        //Dropdown Menü unterhalb der Tabbuttons erweitern
-                        await createTabButtonDropDown('dropdown-content'+ECUDiagDescriptions.shortLabel+'identification',DataType.DataName);
                     //Diagnosedaten Anzeigen
                     // Check if the tab is currently active
                     const isActiveTab = document.querySelector(`.tablink.active`)?.textContent === ('Electronic Control Unit: '+ECUDiagDescriptions.shortLabel);

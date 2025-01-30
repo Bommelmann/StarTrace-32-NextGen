@@ -66,6 +66,16 @@ async function handleTabButtonDropDownClick(DropDownText,parentTabName){
             // Schritt 4: Markiere das Element, wenn der Text gefunden wird
             parentTabelements[i].classList.add('highlight');
             
+            // Schritt 6: Überprüfe, ob das Element versteckt ist und klicke den entsprechenden Toggle-Button
+        if (parentTabelements[i].parentElement.style.display === 'none') {
+            const headingContent = parentTabelements[i].closest('.tabcontent');
+            if (headingContent) {
+                const toggleButton = headingContent.querySelector('button');
+                if (toggleButton) {
+                    toggleButton.click();
+                }
+            }
+        }
             // Schritt 5: Scrolle zum gefundenen Element
             parentTabelements[i].scrollIntoView({
                 behavior: 'smooth',
@@ -96,15 +106,7 @@ async function showAllChildren(element) {
   }
   
 
-// Funktion, die eine Promise zurückgibt, die aufgelöst wird, wenn der Button geklickt wird
-function waitForDisclaimer() {
-    return new Promise((resolve) => {
-        const disclaimer_continue = document.getElementById('disclaimer-continue');
-        disclaimer_continue.addEventListener('click', function () {
-            resolve();
-        });
-    });
-}
+
 
 
 // Funktion zum Anzeigen des Modals
@@ -175,4 +177,4 @@ document.getElementById(ID).style.display = 'block';
 async function UnshowLoadingIcon(ID){
     document.getElementById(ID).style.display = 'none';
 }
-    
+

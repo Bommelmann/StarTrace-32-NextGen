@@ -51,3 +51,4 @@ struct async_resp_arg {
 extern httpd_handle_t server;
 extern QueueHandle_t handle_uds_request_queue;
 extern QueueHandle_t handle_uds_response_queue;
+extern char ipv4_address[16];

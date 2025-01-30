@@ -22,3 +22,5 @@ esp_netif_t *wifi_init_softap(void);
 esp_netif_t *wifi_init_sta(void);
 
 void InitWifi(void);
+
+extern char ipv4_address[16];
